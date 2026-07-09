@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DigiTech Markdown Converter</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='digiicono.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <img class="header-logo" src="{{ url_for('static', filename='digitechsupport.png') }}" alt="DigiTech Support">
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+      <span class="theme-icon" aria-hidden="true">🌙</span>
+    </button>
+  </header>
+
+  <main class="main">
+    <section class="intro">
+      <h1 class="intro-title">Convert your files to Markdown</h1>
+      <p class="intro-text">
+        Markdown is the language LLMs understand best. Converting PDFs, Office
+        documents, and other files to Markdown strips away layout noise and
+        keeps the clean structure — headings, lists, and tables — so models
+        like ChatGPT and Claude read your content accurately, use fewer
+        tokens, and give better answers.
+      </p>
+      <ul class="format-list" aria-label="Supported file formats">
+        <li class="format-chip">PDF</li>
+        <li class="format-chip">DOCX</li>
+        <li class="format-chip">PPTX</li>
+        <li class="format-chip">XLSX / XLS</li>
+        <li class="format-chip">HTML</li>
+        <li class="format-chip">TXT</li>
+        <li class="format-chip">CSV</li>
+        <li class="format-chip">JSON</li>
+        <li class="format-chip">XML</li>
+        <li class="format-chip">Images (PNG, JPG, GIF…)</li>
+        <li class="format-chip">Audio (MP3, WAV)</li>
+        <li class="format-chip">ZIP</li>
+        <li class="format-chip">EPUB</li>
+      </ul>
+    </section>
+
+    <section id="drop-zone" class="drop-zone" tabindex="0" role="button"
+             aria-label="Drag and drop files here or click to browse">
+      <div class="drop-zone-inner">
+        <span class="drop-zone-icon" aria-hidden="true">📄</span>
+        <p class="drop-zone-title">Drag &amp; drop files here</p>
+        <p class="drop-zone-subtitle">or click to browse</p>
+        <button id="browse-btn" class="btn btn-primary" type="button">Browse Files</button>
+      </div>
+      <input id="file-input" type="file" multiple hidden>
+    </section>
+
+    <section id="progress-section" class="progress-section" hidden>
+      <div class="progress-bar-track">
+        <div id="progress-bar" class="progress-bar-fill"></div>
+      </div>
+      <p id="progress-label" class="progress-label">Uploading…</p>
+    </section>
+
+    <section class="results-section">
+      <h2 class="results-title">Converted Files</h2>
+      <ul id="results-list" class="results-list"></ul>
+      <p id="results-empty" class="results-empty">No files converted yet.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p class="footer-note">
+      <span aria-hidden="true">⚠️</span>
+      Files are temporary. If you refresh or leave this page, your converted
+      files are destroyed on the server and cannot be recovered. Download
+      what you need before leaving.
+    </p>
+    <p class="footer-note">
+      <span aria-hidden="true">🔒</span>
+      No AI or LLM is involved in the conversion. Everything runs locally on
+      this server — your files are never sent to any external service.
+    </p>
+    <p class="footer-credit">#by Havi</p>
+  </footer>
+
+  <div id="backdrop" class="backdrop" hidden></div>
+
+  <aside id="preview-panel" class="preview-panel" aria-hidden="true">
+    <div class="preview-header">
+      <h3 id="preview-title" class="preview-title"></h3>
+      <button id="preview-close" class="btn-icon" type="button" aria-label="Close preview">✕</button>
+    </div>
+    <div id="preview-content" class="preview-content"></div>
+    <div class="preview-footer">
+      <button id="preview-download" class="btn btn-primary" type="button">⬇ Download</button>
+    </div>
+  </aside>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
