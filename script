@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -e
+
+VENV_PATH="$HOME/.amigo"
+
+usage() {
+  echo "Usage:"
+  echo "  script.sh <input.pdf>        Convert PDF to Markdown"
+  echo "  script.sh -i                 Install virtualenv + dependencies"
+  echo "  script.sh -r                 Reinstall markitdown"
+  exit 1
+}
+
+if [[ $# -eq 0 ]]; then
+  usage
+fi
+
+if [[ "$1" == "-i" ]]; then
+  python3 -m pip install --upgrade pip virtualenv
+
+  python3 -m virtualenv "$VENV_PATH"
+
+  source "$VENV_PATH/bin/activate"
+
+  pip install --upgrade pip
+  pip install --no-cache-dir "markitdown[all]"
+
+  echo
+  echo "Installed in: $VENV_PATH"
+  echo "Activate with:"
+  echo "source $VENV_PATH/bin/activate"
+
+  exit 0
+fi
+
+if [[ "$1" == "-r" ]]; then
+  source "$VENV_PATH/bin/activate"
+
+  rm -f "$VENV_PATH/bin/markitdown"
+
+  pip uninstall -y markitdown || true
+  pip install --no-cache-dir "markitdown[all]"
+
+  exit 0
+fi
+
+input="$1"
+
+if [[ ! -f "$input" ]]; then
+  echo "File not found: $input"
+  exit 1
+fi
+
+source "$VENV_PATH/bin/activate"
+
+output="${input%.*}.md"
+
+markitdown "$input" > "$output"
+
+echo "Saved: $output"
