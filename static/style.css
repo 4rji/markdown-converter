@@ -246,45 +246,19 @@ html[data-theme="light"] .bg-glow {
   opacity: 0.65;
 }
 
-.hero-lead {
+.hero-text {
   color: var(--color-text-secondary);
-  font-size: 1.05rem;
-  line-height: 1.5;
-  margin: 0 auto 1.1rem;
-  max-width: 52ch;
+  line-height: 1.65;
+  max-width: 56ch;
+  margin: 0 auto 1.5rem;
 }
 
-.benefits {
-  list-style: none;
-  margin: 0 auto 1.75rem;
-  padding: 0;
-  max-width: 52ch;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.benefit {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  line-height: 1.45;
-  text-align: left;
-}
-
-.benefit strong {
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.benefit-icon {
+.hl {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
   color: var(--color-accent);
-  font-size: 0.6rem;
-  flex-shrink: 0;
-  position: relative;
-  top: -1px;
+  border-radius: 4px;
+  padding: 0.05em 0.3em;
+  font-style: normal;
 }
 
 .format-list {
