@@ -173,10 +173,10 @@
         makeSpan("result-error-message", file.error || "Conversion failed")
       );
     } else {
-      const previewBtn = makeIconButton("👁", `Preview ${file.md_name}`, () =>
+      const previewBtn = makeViewButton(`Preview ${file.md_name}`, () =>
         openPreview(file.id, file.md_name)
       );
-      const downloadBtn = makeIconButton("⬇", `Download ${file.md_name}`, () =>
+      const downloadBtn = makeDownloadButton(`Download ${file.md_name}`, () =>
         downloadFile(file.id, item)
       );
       const actions = document.createElement("span");
@@ -199,6 +199,30 @@
     span.className = className;
     span.textContent = text;
     return span;
+  }
+
+  function makeDownloadButton(label, onClick) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn-download";
+    button.setAttribute("aria-label", label);
+    button.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+      "<span>Download</span>";
+    button.addEventListener("click", onClick);
+    return button;
+  }
+
+  function makeViewButton(label, onClick) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn-view";
+    button.setAttribute("aria-label", label);
+    button.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+      "<span>View</span>";
+    button.addEventListener("click", onClick);
+    return button;
   }
 
   function makeIconButton(icon, label, onClick) {
