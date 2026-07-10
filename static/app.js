@@ -387,6 +387,23 @@
 
   /* ---------- Preview panel ---------- */
 
+  function renderMarkdownPage(markdown) {
+    previewContent.innerHTML = "";
+    const page = document.createElement("div");
+    page.className = "md-page";
+
+    if (window.marked && window.DOMPurify) {
+      const rawHtml = window.marked.parse(markdown, { breaks: true });
+      page.innerHTML = window.DOMPurify.sanitize(rawHtml);
+    } else {
+      page.textContent = markdown;
+      page.classList.add("md-page-plain");
+    }
+
+    previewContent.appendChild(page);
+    previewContent.scrollTop = 0;
+  }
+
   async function openPreview(fileId, mdName) {
     try {
       const response = await fetch(`/preview/${encodeURIComponent(fileId)}`);
@@ -395,7 +412,7 @@
       }
       const markdown = await response.text();
       previewTitle.textContent = mdName;
-      previewContent.textContent = markdown;
+      renderMarkdownPage(markdown);
       activePreviewId = fileId;
       activePreviewMarkdown = markdown;
       backdrop.hidden = false;
