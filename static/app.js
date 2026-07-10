@@ -21,9 +21,12 @@
   const previewTitle = document.getElementById("preview-title");
   const previewContent = document.getElementById("preview-content");
   const previewClose = document.getElementById("preview-close");
+  const previewCopy = document.getElementById("preview-copy");
   const previewDownload = document.getElementById("preview-download");
 
   let activePreviewId = null;
+  let activePreviewMarkdown = "";
+  const copyResetTimers = new WeakMap();
 
   /* ---------- Theme ---------- */
 
@@ -176,12 +179,15 @@
       const previewBtn = makeViewButton(`Preview ${file.md_name}`, () =>
         openPreview(file.id, file.md_name)
       );
+      const copyBtn = makeCopyButton(`Copy ${file.md_name}`, (event) =>
+        copyFile(file.id, event.currentTarget)
+      );
       const downloadBtn = makeDownloadButton(`Download ${file.md_name}`, () =>
         downloadFile(file.id, item)
       );
       const actions = document.createElement("span");
       actions.className = "result-actions";
-      actions.append(previewBtn, downloadBtn);
+      actions.append(previewBtn, copyBtn, downloadBtn);
       item.dataset.fileId = file.id;
       item.append(
         makeSpan("result-icon", "📄"),
@@ -225,14 +231,87 @@
     return button;
   }
 
-  function makeIconButton(icon, label, onClick) {
+  function makeCopyButton(label, onClick) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "btn-icon";
-    button.textContent = icon;
+    button.className = "btn-copy";
     button.setAttribute("aria-label", label);
+    button.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+      "<span data-button-label>Copy</span>";
     button.addEventListener("click", onClick);
     return button;
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      if (!document.execCommand("copy")) {
+        throw new Error("Copy command failed");
+      }
+    } finally {
+      textarea.remove();
+    }
+  }
+
+  function setCopyStatus(button, text) {
+    if (!button) return;
+    const label = button.querySelector("[data-button-label]");
+    if (!label) return;
+
+    if (!button.dataset.defaultCopyLabel) {
+      button.dataset.defaultCopyLabel = label.textContent;
+    }
+    if (copyResetTimers.has(button)) {
+      window.clearTimeout(copyResetTimers.get(button));
+      copyResetTimers.delete(button);
+    }
+
+    label.textContent = text;
+    button.disabled = text === "Copying";
+    if (text === "Copying") return;
+
+    const defaultLabel = button.dataset.defaultCopyLabel;
+    const resetTimer = window.setTimeout(() => {
+      label.textContent = defaultLabel;
+      button.disabled = false;
+      copyResetTimers.delete(button);
+    }, 1400);
+
+    copyResetTimers.set(button, resetTimer);
+  }
+
+  async function copyFile(fileId, button) {
+    setCopyStatus(button, "Copying");
+    try {
+      let markdown = "";
+      if (activePreviewId === fileId && activePreviewMarkdown) {
+        markdown = activePreviewMarkdown;
+      } else {
+        const response = await fetch(`/preview/${encodeURIComponent(fileId)}`);
+        if (!response.ok) {
+          throw new Error(`Copy unavailable (HTTP ${response.status})`);
+        }
+        markdown = await response.text();
+      }
+      await copyText(markdown);
+      setCopyStatus(button, "Copied");
+    } catch {
+      setCopyStatus(button, "Failed");
+    }
   }
 
   /* ---------- Download ---------- */
@@ -266,12 +345,15 @@
       previewTitle.textContent = mdName;
       previewContent.innerHTML = marked.parse(markdown);
       activePreviewId = fileId;
+      activePreviewMarkdown = markdown;
       backdrop.hidden = false;
       previewPanel.classList.add("open");
       previewPanel.setAttribute("aria-hidden", "false");
     } catch (error) {
       previewTitle.textContent = mdName;
       previewContent.textContent = error.message;
+      activePreviewId = null;
+      activePreviewMarkdown = "";
       backdrop.hidden = false;
       previewPanel.classList.add("open");
       previewPanel.setAttribute("aria-hidden", "false");
@@ -283,6 +365,7 @@
     previewPanel.setAttribute("aria-hidden", "true");
     backdrop.hidden = true;
     activePreviewId = null;
+    activePreviewMarkdown = "";
   }
 
   previewClose.addEventListener("click", closePreview);
@@ -300,6 +383,11 @@
       `[data-file-id="${activePreviewId}"]`
     );
     downloadFile(activePreviewId, listItem);
+  });
+
+  previewCopy.addEventListener("click", (event) => {
+    if (activePreviewId === null) return;
+    copyFile(activePreviewId, event.currentTarget);
   });
 
   /* ---------- Init ---------- */
