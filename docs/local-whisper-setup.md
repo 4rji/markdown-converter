@@ -28,6 +28,14 @@ mu-law. `libgomp1` provides the GNU OpenMP runtime used for CPU inference.
 These examples assume the application is installed at
 `/opt/markdown-converter` and runs as the `markdown-converter` user.
 
+To apply the server-side setup in one step from the repository root, run:
+
+```bash
+sudo bash docs/install-local-whisper.sh
+```
+
+Add `--download-model` if the server should also fetch the local Whisper model.
+
 ```bash
 sudo -u markdown-converter python3 -m venv /opt/markdown-converter/.venv
 sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install --upgrade pip
