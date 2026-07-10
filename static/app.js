@@ -192,9 +192,10 @@
   }
 
   function restoreResultHistory() {
-    readResultHistory().forEach((file) =>
-      addResultItem(file, { persist: false })
-    );
+    readResultHistory()
+      .slice()
+      .reverse()
+      .forEach((file) => addResultItem(file, { persist: false }));
   }
 
   function clearResultHistory() {
@@ -252,7 +253,7 @@
       );
     }
 
-    resultsList.appendChild(item);
+    resultsList.prepend(item);
     if (options.persist !== false) {
       saveResultToHistory(file);
     }
