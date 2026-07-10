@@ -15,6 +15,18 @@ your actual project path.
 
 ## 1. Install System Dependencies
 
+To apply this guide in one step from the repository root, run:
+
+```bash
+sudo bash docs/install-systemd-service.sh
+```
+
+If the repository is not already present on the server, pass the clone URL:
+
+```bash
+sudo REPO_URL=https://github.com/4rji/markdown-converter.git bash docs/install-systemd-service.sh
+```
+
 On Debian or Ubuntu:
 
 ```bash
