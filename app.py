@@ -185,7 +185,6 @@ def file_too_large(_error):
     return jsonify({"files": [], "error": "File exceeds the 50 MB limit"}), 413
 
 
-# Port 8080: macOS AirPlay Receiver (ControlCenter) squats port 5000 on ::1,
-# so browsers resolving localhost via IPv6 get its empty 403 instead of Flask.
+# Listen on all IPv4 interfaces so the app can be reached from other machines.
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8080, debug=False)
+    app.run(host="0.0.0.0", port=8082, debug=False)

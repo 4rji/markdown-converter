@@ -65,7 +65,7 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 
 4. **Open your browser:**
    ```
-   http://localhost:8080
+   http://SERVER_IP:8082
    ```
 
 ## Usage

@@ -69,7 +69,7 @@ sudo -u markdown-converter /opt/markdown-converter/.venv/bin/python /opt/markdow
 Open another terminal and test:
 
 ```bash
-curl http://127.0.0.1:8080
+curl http://SERVER_IP:8082
 ```
 
 Stop the manual app process with `Ctrl+C` after testing.
@@ -175,27 +175,19 @@ sudo systemctl disable markdown-converter
 By default, this app listens on:
 
 ```text
-127.0.0.1:8080
+0.0.0.0:8082
 ```
 
-That means it is only reachable from the same server. For production, a common
-setup is to keep Flask on `127.0.0.1:8080` and put Nginx, Caddy, or another
-reverse proxy in front of it.
+That means it listens on all IPv4 network interfaces. You can access it from
+another machine with:
 
-If you want the Flask app to listen directly on all network interfaces, change
-the final line in `app.py` from:
-
-```python
-app.run(host="127.0.0.1", port=8080, debug=False)
+```text
+http://SERVER_IP:8082
 ```
 
-to:
-
-```python
-app.run(host="0.0.0.0", port=8080, debug=False)
-```
-
-Only do this if your firewall and server exposure are configured correctly.
+Make sure your firewall allows inbound traffic on port `8082`. For production,
+a common setup is to put Nginx, Caddy, or another reverse proxy in front of the
+Flask app.
 
 ## 11. Updating the App
 
@@ -207,4 +199,3 @@ sudo -u markdown-converter git pull
 sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install -r requirements.txt
 sudo systemctl restart markdown-converter
 ```
-
