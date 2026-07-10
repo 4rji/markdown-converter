@@ -4,6 +4,8 @@
   "use strict";
 
   const THEME_STORAGE_KEY = "digi-theme";
+  const HISTORY_STORAGE_KEY = "digi-result-history";
+  const HISTORY_LIMIT = 50;
   const DEFAULT_THEME = "dark";
 
   const dropZone = document.getElementById("drop-zone");
@@ -154,6 +156,44 @@
     resultsEmpty.hidden = resultsList.children.length > 0;
   }
 
+  function readResultHistory() {
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(HISTORY_STORAGE_KEY));
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((file) => file && file.id && file.md_name);
+    } catch {
+      return [];
+    }
+  }
+
+  function writeResultHistory(history) {
+    try {
+      sessionStorage.setItem(
+        HISTORY_STORAGE_KEY,
+        JSON.stringify(history.slice(-HISTORY_LIMIT))
+      );
+    } catch {
+      // The app still works when browser storage is unavailable.
+    }
+  }
+
+  function saveResultToHistory(file) {
+    if (file.status !== "ok") return;
+    const history = readResultHistory().filter((entry) => entry.id !== file.id);
+    history.push({
+      id: file.id,
+      md_name: file.md_name,
+      status: "ok",
+    });
+    writeResultHistory(history);
+  }
+
+  function restoreResultHistory() {
+    readResultHistory().forEach((file) =>
+      addResultItem(file, { persist: false })
+    );
+  }
+
   function renderUploadError(message) {
     addResultItem({
       id: null,
@@ -164,7 +204,7 @@
     });
   }
 
-  function addResultItem(file) {
+  function addResultItem(file, options = {}) {
     const item = document.createElement("li");
     item.className = "result-item";
 
@@ -183,7 +223,7 @@
         copyFile(file.id, event.currentTarget)
       );
       const downloadBtn = makeDownloadButton(`Download ${file.md_name}`, () =>
-        downloadFile(file.id, item)
+        downloadFile(file.id)
       );
       const actions = document.createElement("span");
       actions.className = "result-actions";
@@ -197,6 +237,9 @@
     }
 
     resultsList.appendChild(item);
+    if (options.persist !== false) {
+      saveResultToHistory(file);
+    }
     updateEmptyState();
   }
 
@@ -316,21 +359,13 @@
 
   /* ---------- Download ---------- */
 
-  function downloadFile(fileId, listItem) {
+  function downloadFile(fileId) {
     const link = document.createElement("a");
     link.href = `/download/${encodeURIComponent(fileId)}`;
     link.download = "";
     document.body.appendChild(link);
     link.click();
     link.remove();
-
-    if (listItem) {
-      listItem.remove();
-      updateEmptyState();
-    }
-    if (activePreviewId === fileId) {
-      closePreview();
-    }
   }
 
   /* ---------- Preview panel ---------- */
@@ -379,10 +414,7 @@
 
   previewDownload.addEventListener("click", () => {
     if (activePreviewId === null) return;
-    const listItem = resultsList.querySelector(
-      `[data-file-id="${activePreviewId}"]`
-    );
-    downloadFile(activePreviewId, listItem);
+    downloadFile(activePreviewId);
   });
 
   previewCopy.addEventListener("click", (event) => {
@@ -393,5 +425,6 @@
   /* ---------- Init ---------- */
 
   initTheme();
+  restoreResultHistory();
   updateEmptyState();
 })();

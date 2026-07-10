@@ -29,7 +29,9 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 ✨ **Drag & Drop Interface** — Drop files directly or browse your computer  
 🔄 **Batch Processing** — Convert multiple files at once  
 👁️ **Live Preview** — See Markdown before downloading  
+📋 **Copy Markdown** — Copy converted text without downloading  
 💾 **Instant Download** — Get your converted files immediately  
+🕘 **Session History** — Keep converted files in the browser tab while they are available  
 🔒 **Privacy First** — Temporary files are auto-deleted (30 min timeout)  
 🤖 **OCR Support** — Extracts text from images using Tesseract  
 
@@ -72,10 +74,11 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 
 1. **Upload files** by dragging & dropping or clicking "Browse Files"
 2. **Wait for conversion** — Processing happens instantly
-3. **Preview** the Markdown content in the built-in viewer
-4. **Download** your converted files as `.md` files
+3. **Preview or copy** the Markdown content in the built-in viewer
+4. **Download** your converted files as `.md` files when needed
 
 Files are stored temporarily and automatically deleted after 30 minutes of inactivity.
+The browser stores only session metadata for the result list, not file content.
 
 ## Architecture
 
@@ -92,14 +95,14 @@ Built with:
 1. **Upload** — Files are securely uploaded and stored in temporary directories
 2. **Convert** — The MarkItDown library processes the file and extracts text
 3. **Enhance** — For images, optional OCR extracts visible text
-4. **Download** — Converted Markdown file is served with a single click
-5. **Cleanup** — Temporary files are automatically deleted after download or timeout
+4. **Use** — Converted Markdown can be previewed, copied, or downloaded
+5. **Cleanup** — Temporary files remain available during the session and are automatically deleted after timeout
 
 ## Security & Privacy
 
 - Files are stored in temporary directories only
 - Automatic cleanup after 30 minutes
-- No files are persisted or shared
+- No file contents are persisted permanently or shared
 - Maximum file size: 50 MB per file
 - Browser-friendly download headers
 

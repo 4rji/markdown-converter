@@ -2,7 +2,7 @@
 
 Converts uploaded files to Markdown using the markitdown library.
 Converted files live in temp directories and are cleaned up after
-download or after 30 minutes of inactivity.
+30 minutes of inactivity.
 """
 
 import shutil
@@ -76,6 +76,7 @@ def find_markdown_file(file_id: str) -> Path:
     md_files = list(directory.glob("*.md"))
     if not md_files:
         abort(404)
+    directory.touch(exist_ok=True)
     return md_files[0]
 
 
@@ -169,15 +170,12 @@ def preview(file_id: str):
 @app.route("/download/<file_id>")
 def download(file_id: str):
     md_file = find_markdown_file(file_id)
-    directory = md_file.parent
-    response = send_file(
+    return send_file(
         md_file,
         as_attachment=True,
         download_name=md_file.name,
         mimetype="text/markdown",
     )
-    response.call_on_close(lambda: shutil.rmtree(directory, ignore_errors=True))
-    return response
 
 
 @app.errorhandler(413)
