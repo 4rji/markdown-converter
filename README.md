@@ -34,7 +34,7 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 🕘 **Session History** — Keep converted files in the browser tab while they are available  
 🔒 **Privacy First** — Temporary files are auto-deleted (30 min timeout)  
 🤖 **OCR Support** — Extracts text from images using Tesseract  
-🎙️ **Private Transcription** — Runs faster-whisper locally with no remote API  
+🎙️ **Private Transcription** — Runs faster-whisper locally with no remote API
 
 ## Installation
 
