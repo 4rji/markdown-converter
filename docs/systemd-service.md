@@ -19,8 +19,11 @@ On Debian or Ubuntu:
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip tesseract-ocr
+sudo apt install -y python3 python3-venv python3-pip ffmpeg libgomp1 tesseract-ocr
 ```
+
+`ffmpeg` normalizes audio codecs such as G.711 mu-law before local
+transcription. `libgomp1` provides the OpenMP runtime used for CPU inference.
 
 `tesseract-ocr` is optional, but it enables OCR support for image uploads.
 
@@ -57,6 +60,9 @@ sudo -u markdown-converter python3 -m venv /opt/markdown-converter/.venv
 sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install --upgrade pip
 sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install -r /opt/markdown-converter/requirements.txt
 ```
+
+Audio transcription also requires a model stored on the server. Complete
+[Local Whisper Setup](local-whisper-setup.md) before enabling audio uploads.
 
 ## 5. Test the App Manually
 
@@ -96,6 +102,10 @@ Group=markdown-converter
 WorkingDirectory=/opt/markdown-converter
 Environment=PYTHONUNBUFFERED=1
 Environment=MAX_UPLOAD_SIZE_MB=500
+Environment=WHISPER_MODEL_PATH=/opt/models/faster-whisper-base
+Environment=WHISPER_BEAM_SIZE=5
+Environment=FFMPEG_TIMEOUT_SECONDS=600
+Environment=OMP_NUM_THREADS=4
 ExecStart=/opt/markdown-converter/.venv/bin/python /opt/markdown-converter/app.py
 Restart=always
 RestartSec=5
@@ -108,6 +118,11 @@ Important settings:
 
 - `ExecStart` starts the Flask app.
 - `MAX_UPLOAD_SIZE_MB` controls the maximum size of each uploaded file.
+- `WHISPER_MODEL_PATH` must point to the model directory downloaded by the local
+  Whisper setup guide.
+- `OMP_NUM_THREADS=4` matches the recommended four-vCPU configuration.
+- The application permits only one audio normalization/transcription job at a
+  time within this single service process.
 - `Restart=always` restarts the app if it exits or crashes.
 - `RestartSec=5` waits 5 seconds before restarting.
 - `WantedBy=multi-user.target` allows the service to start during normal boot.
@@ -212,6 +227,6 @@ sudo systemctl restart markdown-converter
 sudo systemctl status markdown-converter --no-pager
 ```
 
-The current service needs only `PYTHONUNBUFFERED` and the optional
-`MAX_UPLOAD_SIZE_MB` setting. Audio and video transcription are disabled, so no
-speech model or transcription-service environment variables are required.
+If the service definition changed, ensure it contains `WHISPER_MODEL_PATH` and
+the CPU settings shown above before running `daemon-reload`. No API key or
+remote transcription-service setting is required.

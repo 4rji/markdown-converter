@@ -1,3 +1,4 @@
 flask>=3.0
 markitdown[docx,outlook,pdf,pptx,xls,xlsx]
+faster-whisper
 pytesseract  # local OCR for images; requires the tesseract binary (brew install tesseract)
