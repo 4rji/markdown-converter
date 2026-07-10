@@ -18,6 +18,7 @@
   const progressLabel = document.getElementById("progress-label");
   const resultsList = document.getElementById("results-list");
   const resultsEmpty = document.getElementById("results-empty");
+  const clearHistoryBtn = document.getElementById("clear-history-btn");
   const backdrop = document.getElementById("backdrop");
   const previewPanel = document.getElementById("preview-panel");
   const previewTitle = document.getElementById("preview-title");
@@ -153,7 +154,9 @@
   /* ---------- Results list ---------- */
 
   function updateEmptyState() {
-    resultsEmpty.hidden = resultsList.children.length > 0;
+    const hasResults = resultsList.children.length > 0;
+    resultsEmpty.hidden = hasResults;
+    clearHistoryBtn.disabled = !hasResults;
   }
 
   function readResultHistory() {
@@ -193,6 +196,19 @@
       addResultItem(file, { persist: false })
     );
   }
+
+  function clearResultHistory() {
+    try {
+      sessionStorage.removeItem(HISTORY_STORAGE_KEY);
+    } catch {
+      // Clearing the visible list still works when browser storage is blocked.
+    }
+    resultsList.replaceChildren();
+    closePreview();
+    updateEmptyState();
+  }
+
+  clearHistoryBtn.addEventListener("click", clearResultHistory);
 
   function renderUploadError(message) {
     addResultItem({
@@ -378,7 +394,7 @@
       }
       const markdown = await response.text();
       previewTitle.textContent = mdName;
-      previewContent.innerHTML = marked.parse(markdown);
+      previewContent.textContent = markdown;
       activePreviewId = fileId;
       activePreviewMarkdown = markdown;
       backdrop.hidden = false;

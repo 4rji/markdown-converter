@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DigiTech Markdown Converter</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='digiicono.png') }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
@@ -88,7 +84,16 @@
     </section>
 
     <section class="results-section reveal" style="--d: .44s">
-      <h2 class="results-title"><span class="md-mark" aria-hidden="true">##&nbsp;</span>Converted Files</h2>
+      <div class="results-header">
+        <h2 class="results-title"><span class="md-mark" aria-hidden="true">##&nbsp;</span>Converted Files</h2>
+        <button id="clear-history-btn" class="btn-clear-history" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14H6L5 6m3 0V4h8v2"></path>
+          </svg>
+          <span>Clear history</span>
+        </button>
+      </div>
       <ul id="results-list" class="results-list"></ul>
       <p id="results-empty" class="results-empty">Nothing yet — feed the window above.</p>
     </section>
@@ -101,7 +106,7 @@
         <p class="notice-text">No AI involved. Conversion is 100% local — your files never leave this server.</p>
       </div>
     </div>
-    <a class="footer-credit" href="https://4rji.com" target="_blank" rel="noopener"><span class="hash">#</span>by Havi</a>
+    <span class="footer-credit"><span class="hash">#</span>by Havi</span>
   </footer>
 
   <div id="backdrop" class="backdrop" hidden></div>

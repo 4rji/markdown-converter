@@ -24,7 +24,7 @@ if [[ "$1" == "-i" ]]; then
   source "$VENV_PATH/bin/activate"
 
   pip install --upgrade pip
-  pip install --no-cache-dir "markitdown[all]"
+  pip install --no-cache-dir -r requirements.txt
 
   echo
   echo "Installed in: $VENV_PATH"
@@ -40,7 +40,7 @@ if [[ "$1" == "-r" ]]; then
   rm -f "$VENV_PATH/bin/markitdown"
 
   pip uninstall -y markitdown || true
-  pip install --no-cache-dir "markitdown[all]"
+  pip install --no-cache-dir "markitdown[docx,outlook,pdf,pptx,xls,xlsx]"
 
   exit 0
 fi

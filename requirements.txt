@@ -1,3 +1,4 @@
 flask>=3.0
-markitdown[all]
+markitdown[docx,outlook,pdf,pptx,xls,xlsx]
+faster-whisper  # local-only audio transcription; model files are supplied separately
 pytesseract  # local OCR for images; requires the tesseract binary (brew install tesseract)

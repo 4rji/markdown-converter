@@ -22,7 +22,7 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 - **Web content:** HTML files
 - **Images:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`
 - **Archives:** `.zip`, `.epub`
-- **Audio:** `.mp3`, `.wav`
+- **Audio:** `.mp3`, `.wav`, `.m4a`, `.mp4` (requires a local Whisper model)
 
 ## Features
 
@@ -41,7 +41,12 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 
 - Python 3.9+
 - `pip` or your preferred Python package manager
+- FFmpeg for automatic conversion of telephony WAV codecs such as G.711 μ-law
+- A faster-whisper model directory stored locally for audio transcription
 - (Optional) Tesseract for OCR support: `brew install tesseract` (macOS) or `apt-get install tesseract-ocr` (Linux)
+
+Install FFmpeg with `brew install ffmpeg` on macOS or `apt-get install ffmpeg`
+on Debian/Ubuntu.
 
 ### Quick Start
 
@@ -69,6 +74,24 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
    ```
    http://SERVER_IP:8082
    ```
+
+The upload limit defaults to 500 MB per file. Override it when starting the
+server if needed:
+
+```bash
+MAX_UPLOAD_SIZE_MB=1000 python app.py
+```
+
+Audio transcription is disabled until a local faster-whisper model is supplied.
+The application never downloads a model or sends audio to a transcription API:
+
+```bash
+WHISPER_MODEL_PATH=/absolute/path/to/local-whisper-model python app.py
+```
+
+Optional settings are `WHISPER_LANGUAGE` (blank means automatic detection),
+`WHISPER_DEVICE` (defaults to `cpu`), and `WHISPER_COMPUTE_TYPE` (defaults to
+`int8`). The model directory must already exist on the server.
 
 ## Usage
 
@@ -103,12 +126,14 @@ Built with:
 - Files are stored in temporary directories only
 - Automatic cleanup after 30 minutes
 - No file contents are persisted permanently or shared
-- Maximum file size: 50 MB per file
+- No external browser assets or remote transcription services are used
+- Local Whisper model downloads are disabled at runtime
+- Maximum file size: 500 MB per file by default (configurable with `MAX_UPLOAD_SIZE_MB`)
 - Browser-friendly download headers
 
 ## Limitations
 
-- File size limited to 50 MB
+- File size limited to 500 MB by default
 - Some complex layouts may lose formatting details
 - OCR quality depends on image clarity
 - Unsupported file types will return an error
