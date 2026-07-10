@@ -19,11 +19,8 @@ On Debian or Ubuntu:
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip ffmpeg tesseract-ocr
+sudo apt install -y python3 python3-venv python3-pip tesseract-ocr
 ```
-
-`ffmpeg` enables automatic conversion of telephony WAV codecs such as G.711
-μ-law into PCM before transcription.
 
 `tesseract-ocr` is optional, but it enables OCR support for image uploads.
 
@@ -99,7 +96,6 @@ Group=markdown-converter
 WorkingDirectory=/opt/markdown-converter
 Environment=PYTHONUNBUFFERED=1
 Environment=MAX_UPLOAD_SIZE_MB=500
-Environment=WHISPER_MODEL_PATH=/opt/models/faster-whisper
 ExecStart=/opt/markdown-converter/.venv/bin/python /opt/markdown-converter/app.py
 Restart=always
 RestartSec=5
@@ -112,8 +108,6 @@ Important settings:
 
 - `ExecStart` starts the Flask app.
 - `MAX_UPLOAD_SIZE_MB` controls the maximum size of each uploaded file.
-- `WHISPER_MODEL_PATH` points to a faster-whisper model directory already stored
-  on the server. The application will not download one automatically.
 - `Restart=always` restarts the app if it exits or crashes.
 - `RestartSec=5` waits 5 seconds before restarting.
 - `WantedBy=multi-user.target` allows the service to start during normal boot.
@@ -199,11 +193,25 @@ Flask app.
 
 ## 11. Updating the App
 
-When you deploy new code:
+When you deploy application code or Python dependency changes:
 
 ```bash
 cd /opt/markdown-converter
 sudo -u markdown-converter git pull
 sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install -r requirements.txt
 sudo systemctl restart markdown-converter
+sudo systemctl status markdown-converter --no-pager
 ```
+
+You do not need `daemon-reload` for application code changes. Run it only after
+editing `/etc/systemd/system/markdown-converter.service`, then restart:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart markdown-converter
+sudo systemctl status markdown-converter --no-pager
+```
+
+The current service needs only `PYTHONUNBUFFERED` and the optional
+`MAX_UPLOAD_SIZE_MB` setting. Audio and video transcription are disabled, so no
+speech model or transcription-service environment variables are required.
