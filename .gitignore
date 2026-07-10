@@ -1,2 +1,5 @@
 docs/superpowers/specs/2026-07-08-markdown-converter-web-design.md
 __pycache__/app.cpython-313.pyc
+.atl/.skill-registry.cache.json
+.atl/skill-registry.md
+.claude/settings.local.json
