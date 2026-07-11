@@ -9,3 +9,6 @@ audiofail.wav
 .DS_Store
 docs/.DS_Store
 static/.DS_Store
+__MACOSX/markdown-converter/
+markdown-converter/
+__MACOSX/._markdown-converter
