@@ -32,10 +32,11 @@ Instala todo en `/opt/markdown-converter`: dependencias, usuario de servicio, mo
 sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
 ```
 
-Clave OpenAI después de instalar:
+Clave OpenAI después de instalar, edita la línea `OPENAI_API_KEY=` en el archivo:
 
 ```bash
 sudo nano /opt/markdown-converter/.env
+# OPENAI_API_KEY=tu_clave_de_platform.openai.com/api-keys
 sudo systemctl restart markdown-converter
 ```
 

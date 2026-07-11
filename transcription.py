@@ -294,10 +294,7 @@ def _speaker_names(segments: list[Segment]) -> dict[str, str]:
 
 
 def render_markdown(result: Transcript, include_timestamps: bool) -> str:
-    lines = ["### Audio Transcript", "", f"Engine: {result.engine}", f"Model: `{result.model}`"]
-    if result.language:
-        lines.append(f"Language: {result.language}")
-    lines.append("")
+    lines: list[str] = []
     if result.engine == DIARIZE_ENGINE and result.segments:
         names = _speaker_names(result.segments)
         for segment in result.segments:
