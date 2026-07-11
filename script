@@ -86,7 +86,7 @@ if [[ "$1" == "-r" ]]; then
   rm -f "$VENV_PATH/bin/markitdown"
 
   python -m pip uninstall -y markitdown || true
-  python -m pip install --no-cache-dir "markitdown[docx,outlook,pdf,pptx,xls,xlsx]"
+  python -m pip install --no-cache-dir -r "$REQUIREMENTS_FILE"
 
   exit 0
 fi

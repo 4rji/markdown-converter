@@ -19,18 +19,21 @@ Convierte cualquier documento a Markdown limpio y listo para LLMs: PDF, Office, 
 
 ### Opción A — Producción con systemd (recomendada)
 
-Un solo comando desde el repositorio (Pop!_OS/Ubuntu):
+Con GPU NVIDIA y Whisper local:
 
 ```bash
 git clone <repository-url> && cd markdown-converter
 sudo ./install-systemd-service_new.sh
 ```
 
-Instala todo en `/opt/markdown-converter`: dependencias, MarkItDown, usuario de servicio, modelo, `.env` y servicio habilitado al boot. Esta opción no requiere ejecutar `./script`. Sin GPU:
+Sin GPU:
 
 ```bash
 sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
 ```
+
+El instalador configura `/opt/markdown-converter`, sus dependencias, MarkItDown,
+`.env` y el servicio systemd. No requiere ejecutar `./script`.
 
 Clave OpenAI después de instalar, edita la línea `OPENAI_API_KEY=` en el archivo:
 
@@ -83,18 +86,22 @@ curl -s http://127.0.0.1:8082/api/transcription/status
 
 ### Option A — Production with systemd (recommended)
 
-One command from the repository (Pop!_OS/Ubuntu):
+With an NVIDIA GPU and Local Whisper:
 
 ```bash
 git clone <repository-url> && cd markdown-converter
 sudo ./install-systemd-service_new.sh
 ```
 
-Installs everything into `/opt/markdown-converter`: dependencies, MarkItDown, service account, model, `.env`, and the service enabled at boot. This option does not require running `./script`. Without a GPU:
+Without a GPU:
 
 ```bash
 sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
 ```
+
+The installer configures `/opt/markdown-converter`, its dependencies,
+MarkItDown, `.env`, and the systemd service. It does not require running
+`./script`.
 
 OpenAI key after installation:
 
