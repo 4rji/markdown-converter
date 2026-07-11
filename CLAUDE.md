@@ -40,8 +40,8 @@ python -m pytest tests/
 For local Whisper setup on systems with NVIDIA CUDA:
 ```bash
 ./install_whisper_local.sh
-source .env
 ```
+`app.py` auto-loads `.env` at startup via `env_loader.py` (re-execs once when `.env` adds `LD_LIBRARY_PATH`, since the dynamic linker only reads it at process start). No manual `source .env` needed.
 
 ## Architecture
 

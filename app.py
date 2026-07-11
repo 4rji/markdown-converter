@@ -14,6 +14,13 @@ import time
 import uuid
 from pathlib import Path
 
+from env_loader import load_dotenv_and_reexec
+
+# Load .env (WHISPER_MODEL_PATH, LD_LIBRARY_PATH, ...) before anything that
+# can touch CUDA. May re-exec the process once so the dynamic linker sees
+# LD_LIBRARY_PATH; must therefore run before other application imports.
+load_dotenv_and_reexec()
+
 import requests
 from flask import Flask, abort, jsonify, render_template, request, send_file
 from werkzeug.utils import secure_filename

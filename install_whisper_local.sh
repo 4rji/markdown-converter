@@ -150,6 +150,7 @@ updates = {
     "WHISPER_DEVICE": "cuda",
     "WHISPER_COMPUTE_TYPE": "float16",
     "WHISPER_VENV_PATH": os.environ["VENV_DIR"],
+    "CUDA_VISIBLE_DEVICES": "0",
     "LD_LIBRARY_PATH": os.environ["CUDA_LIB_PATH"],
 }
 
@@ -200,15 +201,14 @@ Python environment:
 Environment file:
   $ENV_FILE
 
-To load the variables in the current shell:
-  set -a
-  source "$ENV_FILE"
-  set +a
-
-To start the application with the shared environment:
-  set -a
-  source "$ENV_FILE"
-  set +a
+The application loads $ENV_FILE automatically at startup.
+Start it with:
   "$VENV_DIR/bin/python" "$SCRIPT_DIR/app.py"
+
+To load the variables in the current shell (only needed for manual
+faster-whisper commands outside the app):
+  set -a
+  source "$ENV_FILE"
+  set +a
 
 EOF

@@ -85,7 +85,12 @@ For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
    optional if you only intend to use document conversion or OpenAI audio
    transcription.
 
-4. **Load the Local Whisper configuration:**
+4. **Local Whisper configuration loads automatically:**
+
+   The application reads `.env` at startup, including `LD_LIBRARY_PATH` for
+   the CUDA libraries, so no manual `source .env` is needed before running
+   it. Sourcing the file is only required for manual `faster-whisper`
+   commands outside the app:
 
    ```bash
    set -a
@@ -93,8 +98,8 @@ For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
    set +a
    ```
 
-   Repeat this in each new shell before starting the application. For a systemd
-   deployment, configure the service to read this file with `EnvironmentFile=`.
+   For a systemd deployment, the service reads this file with
+   `EnvironmentFile=`; variables set by systemd take precedence over `.env`.
 
 5. **Configure OpenAI transcription (optional):**
 
@@ -140,9 +145,6 @@ The complete Local Whisper installation sequence is therefore:
 ```bash
 ./script -i
 ./install_whisper_local.sh
-set -a
-source .env
-set +a
 .venv/bin/python app.py
 ```
 
