@@ -63,11 +63,17 @@ cached in memory. Transcription uses VAD and local jobs are serialized.
 
 ## Configure OpenAI (optional)
 
-Set the API key only in the server environment or secret manager:
+The Local Whisper installer creates `.env`. Add the API key to that file:
 
 ```bash
-export OPENAI_API_KEY='your-key-here'
+nano .env
 ```
+
+```dotenv
+OPENAI_API_KEY=replace_with_your_openai_api_key
+```
+
+The complete variable template is available in [`.env.example`](../.env.example).
 
 Never put the value in source control or frontend configuration. The browser
 does not receive the key. When the key is absent, document conversion and Local

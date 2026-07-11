@@ -98,12 +98,30 @@ For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
 
 5. **Configure OpenAI transcription (optional):**
 
+   The Local Whisper installer creates `.env`. Open that file and add the
+   server-side OpenAI key:
+
    ```bash
-   export OPENAI_API_KEY="your-key-here"
+   nano .env
    ```
 
-   Keep the real key in the server environment or a secret manager. Do not add
-   it to the repository.
+   Add this line, replacing the placeholder with the real value:
+
+   ```dotenv
+   OPENAI_API_KEY=replace_with_your_openai_api_key
+   ```
+
+   See [`.env.example`](.env.example) for all supported variables. For an
+   installation without Local Whisper, create the file from the example:
+
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+
+   Keep the real key only in `.env`, the server environment, or a secret
+   manager. `.env` is ignored by Git; never put the real key in
+   `.env.example` or commit it to the repository.
 
 6. **Run the application using the shared environment:**
 
@@ -140,6 +158,44 @@ server if needed:
 
 ```bash
 MAX_UPLOAD_SIZE_MB=1000 .venv/bin/python app.py
+```
+
+### Production installation with systemd
+
+On Pop!_OS/Ubuntu, the production installer can perform the complete deployment
+in one command from the repository:
+
+```bash
+sudo ./install-systemd-service_new.sh
+```
+
+It synchronizes the application into `/opt/markdown-converter`, creates a
+dedicated `markdown-converter` account, installs the application and CUDA
+dependencies into `/opt/markdown-converter/.venv`, reuses or downloads
+`large-v3-turbo`, copies the current `.env`, corrects its deployment-specific
+CUDA paths, and enables the service at boot.
+
+The source repository is retained; the installer copies rather than deletes it.
+An existing `OPENAI_API_KEY` is preserved. To add or change the key after
+installation:
+
+```bash
+sudo nano /opt/markdown-converter/.env
+sudo systemctl restart markdown-converter
+```
+
+Useful service commands:
+
+```bash
+sudo systemctl status markdown-converter
+sudo journalctl -u markdown-converter -f
+curl -s http://127.0.0.1:8082/api/transcription/status
+```
+
+To deploy without Local Whisper on a server without an NVIDIA GPU:
+
+```bash
+sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
 ```
 
 ## Usage

@@ -1,244 +1,116 @@
 # Run Markdown Converter as a systemd Service
 
-This guide shows how to run the Markdown Converter Flask app as a Linux
-`systemd` service that starts automatically when the server boots and restarts
-if the app exits or crashes.
+The production installer deploys the current repository to
+`/opt/markdown-converter` and configures it to start automatically at boot.
+These instructions target Pop!_OS/Ubuntu with systemd.
 
-The examples below install the app in:
+## Complete installation
 
-```bash
-/opt/markdown-converter
-```
-
-If your project lives somewhere else, replace `/opt/markdown-converter` with
-your actual project path.
-
-## 1. Install System Dependencies
-
-To apply this guide in one step from the repository root, run:
+From the source repository, run:
 
 ```bash
-sudo bash docs/install-systemd-service.sh
+sudo ./install-systemd-service_new.sh
 ```
 
-If the repository is not already present on the server, pass the clone URL:
+The installer:
+
+- installs Python, the version-specific `pythonX.Y-venv` package, FFmpeg,
+  Tesseract, and required system libraries;
+- creates the `markdown-converter` service account;
+- synchronizes the repository to `/opt/markdown-converter` without deleting the
+  source checkout;
+- creates `/opt/markdown-converter/.venv` and installs `requirements.txt`;
+- installs the pip CUDA runtime packages;
+- reuses or downloads `large-v3-turbo` under `/opt/whisper-models`;
+- validates CUDA and float16 model loading;
+- copies `.env`, preserves `OPENAI_API_KEY`, and recalculates
+  `LD_LIBRARY_PATH` for the `/opt` virtual environment;
+- writes, enables, and starts `markdown-converter.service`.
+
+The command is safe to run again when deploying application or dependency
+updates. Existing systemd units are backed up before replacement.
+
+## Environment variables and secrets
+
+The deployed environment file is:
+
+```text
+/opt/markdown-converter/.env
+```
+
+It is owned by the service account with mode `0600`. Add the OpenAI key there:
 
 ```bash
-sudo REPO_URL=https://github.com/4rji/markdown-converter.git bash docs/install-systemd-service.sh
+sudo nano /opt/markdown-converter/.env
 ```
 
-On Debian or Ubuntu:
+```dotenv
+OPENAI_API_KEY=replace_with_your_real_key
+```
+
+Then restart the service:
 
 ```bash
-sudo apt update
-sudo apt install -y python3 python3-venv python3-pip ffmpeg libgomp1 tesseract-ocr
+sudo systemctl restart markdown-converter
 ```
 
-`ffmpeg` normalizes audio codecs such as G.711 mu-law before local
-transcription. `libgomp1` provides the OpenMP runtime used for CPU inference.
-
-`tesseract-ocr` is optional, but it enables OCR support for image uploads.
-
-## 2. Create a Dedicated Service User
-
-Create a Linux user that will run the app:
-
-```bash
-sudo useradd --system --create-home --shell /usr/sbin/nologin markdown-converter
-```
-
-## 3. Install the App
-
-Copy or clone the project into `/opt/markdown-converter`.
-
-Example using `git`:
-
-```bash
-sudo git clone <repository-url> /opt/markdown-converter
-sudo chown -R markdown-converter:markdown-converter /opt/markdown-converter
-```
-
-If the project is already on the server, copy it into `/opt/markdown-converter`
-and then run:
-
-```bash
-sudo chown -R markdown-converter:markdown-converter /opt/markdown-converter
-```
-
-## 4. Create the Python Virtual Environment
-
-```bash
-sudo -u markdown-converter python3 -m venv /opt/markdown-converter/.venv
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install --upgrade pip
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install -r /opt/markdown-converter/requirements.txt
-```
-
-Audio transcription also requires a model stored on the server. Complete
-[Local Whisper Setup](local-whisper-setup.md) before enabling audio uploads.
-
-## 5. Test the App Manually
-
-Before creating the service, confirm that the app starts:
-
-```bash
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/python /opt/markdown-converter/app.py
-```
-
-Open another terminal and test:
-
-```bash
-curl http://SERVER_IP:8082
-```
-
-Stop the manual app process with `Ctrl+C` after testing.
-
-## 6. Create the systemd Service File
-
-Create this file:
-
-```bash
-sudo nano /etc/systemd/system/markdown-converter.service
-```
-
-Paste this service definition:
+The systemd unit loads all variables through:
 
 ```ini
-[Unit]
-Description=Markdown Converter Flask App
-After=network.target
-
-[Service]
-Type=simple
-User=markdown-converter
-Group=markdown-converter
-WorkingDirectory=/opt/markdown-converter
-Environment=PYTHONUNBUFFERED=1
-Environment=MAX_UPLOAD_SIZE_MB=500
-Environment=WHISPER_MODEL_PATH=/opt/models/faster-whisper-base
-Environment=WHISPER_BEAM_SIZE=5
-Environment=FFMPEG_TIMEOUT_SECONDS=600
-Environment=OMP_NUM_THREADS=4
-ExecStart=/opt/markdown-converter/.venv/bin/python /opt/markdown-converter/app.py
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
+EnvironmentFile=/opt/markdown-converter/.env
 ```
 
-Important settings:
+Do not put the real key in `.env.example`, source control, or the unit file.
 
-- `ExecStart` starts the Flask app.
-- `MAX_UPLOAD_SIZE_MB` controls the maximum size of each uploaded file.
-- `WHISPER_MODEL_PATH` must point to the model directory downloaded by the local
-  Whisper setup guide.
-- `OMP_NUM_THREADS=4` matches the recommended four-vCPU configuration.
-- The application permits only one audio normalization/transcription job at a
-  time within this single service process.
-- `Restart=always` restarts the app if it exits or crashes.
-- `RestartSec=5` waits 5 seconds before restarting.
-- `WantedBy=multi-user.target` allows the service to start during normal boot.
+## Optional installer settings
 
-## 7. Enable and Start the Service
-
-Reload systemd so it sees the new service:
+Skip Local Whisper on a server without NVIDIA CUDA:
 
 ```bash
-sudo systemctl daemon-reload
+sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
 ```
 
-Enable the service at boot:
+Skip Tesseract OCR:
 
 ```bash
-sudo systemctl enable markdown-converter
+sudo INSTALL_TESSERACT=0 ./install-systemd-service_new.sh
 ```
 
-Start it now:
+Use a Hugging Face token for the initial model download:
 
 ```bash
-sudo systemctl start markdown-converter
+sudo HF_TOKEN=your_read_token ./install-systemd-service_new.sh
 ```
 
-## 8. Check Service Status and Logs
+Alternative locations and names can be supplied through `APP_DIR`, `MODEL_DIR`,
+`SERVICE_NAME`, `APP_USER`, and `APP_GROUP`.
 
-Check whether the service is running:
+## Operations
+
+Check the service:
 
 ```bash
 sudo systemctl status markdown-converter
 ```
 
-View live logs:
+Follow logs, including Local Whisper runtime states:
 
 ```bash
 sudo journalctl -u markdown-converter -f
 ```
 
-View recent logs:
-
-```bash
-sudo journalctl -u markdown-converter -n 100 --no-pager
-```
-
-## 9. Restart, Stop, or Disable the Service
-
-Restart the app:
+Restart or stop it:
 
 ```bash
 sudo systemctl restart markdown-converter
-```
-
-Stop the app:
-
-```bash
 sudo systemctl stop markdown-converter
 ```
 
-Disable automatic startup:
+Confirm transcription capabilities:
 
 ```bash
-sudo systemctl disable markdown-converter
+curl -s http://127.0.0.1:8082/api/transcription/status
 ```
 
-## 10. Network Access Note
-
-By default, this app listens on:
-
-```text
-0.0.0.0:8082
-```
-
-That means it listens on all IPv4 network interfaces. You can access it from
-another machine with:
-
-```text
-http://SERVER_IP:8082
-```
-
-Make sure your firewall allows inbound traffic on port `8082`. For production,
-a common setup is to put Nginx, Caddy, or another reverse proxy in front of the
-Flask app.
-
-## 11. Updating the App
-
-When you deploy application code or Python dependency changes:
-
-```bash
-cd /opt/markdown-converter
-sudo -u markdown-converter git pull
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install -r requirements.txt
-sudo systemctl restart markdown-converter
-sudo systemctl status markdown-converter --no-pager
-```
-
-You do not need `daemon-reload` for application code changes. Run it only after
-editing `/etc/systemd/system/markdown-converter.service`, then restart:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart markdown-converter
-sudo systemctl status markdown-converter --no-pager
-```
-
-If the service definition changed, ensure it contains `WHISPER_MODEL_PATH` and
-the CPU settings shown above before running `daemon-reload`. No API key or
-remote transcription-service setting is required.
+The application listens on `0.0.0.0:8082`. Configure the host firewall and a
+reverse proxy as appropriate for the deployment.
