@@ -26,14 +26,18 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader \
     || fail "The NVIDIA GPU is not available."
 
 if [[ "$SKIP_APT" != "1" ]]; then
+    PYTHON_VERSION="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || printf '3.10')"
+    VENV_PACKAGE="python${PYTHON_VERSION}-venv"
     log "Installing system dependencies"
     sudo apt-get update
     sudo apt-get install -y \
         python3 \
         python3-venv \
+        "$VENV_PACKAGE" \
         python3-pip \
         ffmpeg \
-        ca-certificates
+        ca-certificates \
+        libgomp1
 fi
 
 log "Preparing directories"

@@ -64,7 +64,11 @@ For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
    ```
 
    This creates or reuses the repository's `.venv` environment and installs
-   `requirements.txt` into it.
+   `requirements.txt` into it. Run this command as your normal user—do not use
+   `sudo`. The Local Whisper installer invokes `sudo` itself only for the
+   system packages and model directory that require it. On Ubuntu/Pop!_OS, the
+   script detects the active Python version and installs both `python3-venv` and
+   its version-specific package, such as `python3.10-venv`, when needed.
 
 3. **Install Local Whisper with NVIDIA CUDA (recommended for private audio):**
 
