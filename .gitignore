@@ -6,3 +6,6 @@ __pycache__/app.cpython-313.pyc
 audiofail.wav
 .venv/
 .env
+.DS_Store
+docs/.DS_Store
+static/.DS_Store
