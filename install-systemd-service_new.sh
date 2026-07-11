@@ -40,6 +40,8 @@ if [[ "$INSTALL_TESSERACT" == "1" ]]; then
 fi
 apt-get install -y "${apt_packages[@]}"
 
+python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' \
+  || fail "Python 3.10 or newer is required."
 PYTHON_VERSION="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
 apt-get install -y "python${PYTHON_VERSION}-venv"
 
@@ -76,8 +78,40 @@ if [[ ! -x "$VENV_PATH/bin/python" || ! -f "$VENV_PATH/bin/activate" ]]; then
   sudo -u "$APP_USER" python3 -m venv "$VENV_PATH"
 fi
 sudo -u "$APP_USER" -H "$VENV_PATH/bin/python" -m pip install --upgrade pip setuptools wheel
-sudo -u "$APP_USER" -H "$VENV_PATH/bin/python" -m pip install --no-cache-dir \
+sudo -u "$APP_USER" -H "$VENV_PATH/bin/python" -m pip install --upgrade --no-cache-dir \
   -r "$APP_DIR/requirements.txt"
+
+log "Validating document conversion dependencies"
+MARKITDOWN_CLI="$VENV_PATH/bin/markitdown"
+[[ -x "$MARKITDOWN_CLI" ]] \
+  || fail "MarkItDown CLI was not installed at $MARKITDOWN_CLI"
+
+sudo -u "$APP_USER" -H "$VENV_PATH/bin/python" -m pip check
+sudo -u "$APP_USER" -H "$VENV_PATH/bin/python" - <<'PY'
+from importlib import import_module
+from importlib.metadata import version
+
+converters = {
+    "PDF": "pdfminer",
+    "Word": "mammoth",
+    "PowerPoint": "pptx",
+    "Excel XLSX": "openpyxl",
+    "Excel XLS": "xlrd",
+    "Outlook": "olefile",
+}
+for label, module_name in converters.items():
+    import_module(module_name)
+    print(f"{label} dependency: OK ({module_name})")
+print(f"MarkItDown version: {version('markitdown')}")
+PY
+
+smoke_output="$(
+  printf 'MarkItDown installation check\n' \
+    | sudo -u "$APP_USER" -H "$MARKITDOWN_CLI"
+)"
+[[ "$smoke_output" == *"MarkItDown installation check"* ]] \
+  || fail "MarkItDown CLI smoke conversion failed"
+log "MarkItDown CLI validated at $MARKITDOWN_CLI"
 
 CUDA_LIB_PATH=""
 if [[ "$INSTALL_LOCAL_WHISPER" == "1" ]]; then
@@ -274,6 +308,7 @@ cat <<EOF
 Application:      $APP_DIR
 Environment:      $ENV_FILE
 Python:           $VENV_PATH/bin/python
+MarkItDown:       $MARKITDOWN_CLI
 Local model:      $MODEL_DIR
 Service:          $SERVICE_NAME
 

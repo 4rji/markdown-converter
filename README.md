@@ -12,7 +12,7 @@ Convierte cualquier documento a Markdown limpio y listo para LLMs: PDF, Office, 
 
 ### Requisitos
 
-- Python 3.9+ y FFmpeg
+- Python 3.10+ y FFmpeg
 - Whisper local: Pop!_OS/Ubuntu con driver NVIDIA
 - Transcripción cloud: `OPENAI_API_KEY`
 - OCR opcional: `brew install tesseract` (macOS) / `apt-get install tesseract-ocr` (Linux)
@@ -26,7 +26,7 @@ git clone <repository-url> && cd markdown-converter
 sudo ./install-systemd-service_new.sh
 ```
 
-Instala todo en `/opt/markdown-converter`: dependencias, usuario de servicio, modelo, `.env` y servicio habilitado al boot. Sin GPU:
+Instala todo en `/opt/markdown-converter`: dependencias, MarkItDown, usuario de servicio, modelo, `.env` y servicio habilitado al boot. Esta opción no requiere ejecutar `./script`. Sin GPU:
 
 ```bash
 sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
@@ -76,7 +76,7 @@ curl -s http://127.0.0.1:8082/api/transcription/status
 
 ### Prerequisites
 
-- Python 3.9+ and FFmpeg
+- Python 3.10+ and FFmpeg
 - Local Whisper: Pop!_OS/Ubuntu with NVIDIA driver
 - Cloud transcription: `OPENAI_API_KEY`
 - Optional OCR: `brew install tesseract` (macOS) / `apt-get install tesseract-ocr` (Linux)
@@ -90,7 +90,7 @@ git clone <repository-url> && cd markdown-converter
 sudo ./install-systemd-service_new.sh
 ```
 
-Installs everything into `/opt/markdown-converter`: dependencies, service account, model, `.env`, and the service enabled at boot. Without a GPU:
+Installs everything into `/opt/markdown-converter`: dependencies, MarkItDown, service account, model, `.env`, and the service enabled at boot. This option does not require running `./script`. Without a GPU:
 
 ```bash
 sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
@@ -154,7 +154,7 @@ curl -s http://127.0.0.1:8082/api/transcription/status
 
 - Files live only in temp directories, cleaned after 30 minutes
 - Documents never leave the server; audio goes to OpenAI only when a GPT-4o engine is selected
-- Local Whisper never makes API requests; MarkItDown's remote audio converter is disabled
+- Local Whisper never makes API requests; direct audio/video uploads are never routed through MarkItDown
 - All environment variables documented in [`.env.example`](.env.example); never commit a real key
 
 ## Architecture

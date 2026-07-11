@@ -49,8 +49,8 @@ For local Whisper setup on systems with NVIDIA CUDA:
 1. **Upload** (`POST /convert`) — client sends files via multipart; `convert_single_file()` processes each one
 2. **Convert** — route by file type:
    - **Audio/video** (`suffix in AUDIO_EXTENSIONS`) → calls `transcribe()` (from `transcription.py`); result becomes Markdown via `render_markdown()`
-   - **Documents/archives** → MarkItDown converter
-   - **Images** → MarkItDown + optional OCR extraction via Tesseract
+   - **Documents/archives** → `markitdown` CLI from the application's virtualenv
+   - **Images** → `markitdown` CLI + optional OCR extraction via Tesseract
 3. **Store** — converted Markdown saved to a temp directory named `mc-<uuid>`; returned as JSON with file ID
 4. **Retrieve** — client calls `GET /preview/<id>` or `GET /download/<id>` to read/download the `.md` file
 5. **Cleanup** — temp directories auto-delete after 30 minutes (`TEMP_DIR_MAX_AGE_SECONDS`); cleanup check runs before each request
@@ -63,7 +63,7 @@ For local Whisper setup on systems with NVIDIA CUDA:
 ### Key Design Patterns
 
 **Security & Privacy:**
-- MarkItDown remote audio converter is explicitly disabled (`LocalOnlyRequestsSession`); all audio goes to selected transcription engine only
+- Audio/video extensions are routed to the selected transcription engine before the MarkItDown CLI can be invoked
 - Temp directories isolated to `tempfile.gettempdir()` for automatic OS cleanup
 - CSP headers prevent external script/style injection
 - File uploads validated via `secure_filename()`

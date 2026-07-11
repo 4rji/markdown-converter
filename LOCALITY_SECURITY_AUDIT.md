@@ -1,5 +1,10 @@
 # Local-Only Processing Security Audit
 
+> **Historical result:** This report covers the former in-process MarkItDown
+> integration using `LocalOnlyRequestsSession`. Document conversion now invokes
+> the virtual environment's `markitdown` CLI to match the standalone `script`,
+> so the subprocess-based implementation requires a new network-locality audit.
+
 **Audit date:** July 10, 2026  
 **Project:** DigiTech Markdown Converter  
 **Result:** Passed, with the qualifications documented below

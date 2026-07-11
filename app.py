@@ -7,6 +7,7 @@ Converted files live in temp directories and are cleaned up after
 
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import threading
@@ -21,7 +22,6 @@ from env_loader import load_dotenv_and_reexec
 # LD_LIBRARY_PATH; must therefore run before other application imports.
 load_dotenv_and_reexec()
 
-import requests
 from flask import Flask, abort, jsonify, render_template, request, send_file
 from werkzeug.utils import secure_filename
 
@@ -32,12 +32,6 @@ from transcription import (
     transcription_status,
     validate_options,
 )
-
-try:
-    from markitdown import MarkItDown
-except ImportError:
-    print("ERROR: markitdown not found. Run ./script -i to install dependencies.")
-    sys.exit(1)
 
 # OCR is optional: without pytesseract/tesseract, images fall back to
 # metadata-only conversion (markitdown's default behavior).
@@ -77,28 +71,6 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE_BYTES
 
 
-class LocalOnlyRequestsSession(requests.Session):
-    """Reject every outbound request attempted by a document converter."""
-
-    def request(self, method, url, *args, **kwargs):
-        raise RuntimeError(f"External network access is disabled: {url}")
-
-
-def create_local_only_converter() -> MarkItDown:
-    """Build MarkItDown without its remote audio converter."""
-    local_converter = MarkItDown(requests_session=LocalOnlyRequestsSession())
-    registrations = local_converter._converters
-    local_converter._converters = [
-        registration
-        for registration in registrations
-        if registration.converter.__class__.__name__ != "AudioConverter"
-    ]
-    if len(local_converter._converters) == len(registrations):
-        raise RuntimeError("Could not disable MarkItDown's remote audio converter")
-    return local_converter
-
-
-converter = create_local_only_converter()
 audio_processing_lock = threading.Lock()
 
 
@@ -150,6 +122,38 @@ def extract_image_text(input_path: Path) -> str:
         return ""
 
 
+def find_markitdown_cli() -> str:
+    """Return the MarkItDown executable installed beside this Python."""
+    venv_executable = Path(sys.executable).with_name("markitdown")
+    if venv_executable.is_file() and os.access(venv_executable, os.X_OK):
+        return str(venv_executable)
+
+    executable = shutil.which("markitdown")
+    if executable is None:
+        raise RuntimeError("markitdown not found. Run ./script -i to install dependencies.")
+    return executable
+
+
+def convert_with_markitdown_cli(input_path: Path) -> str:
+    """Convert a document through the same CLI used by ./script."""
+    try:
+        process = subprocess.run(
+            [find_markitdown_cli(), str(input_path)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"Could not run MarkItDown: {exc}") from exc
+
+    if process.returncode != 0:
+        detail = process.stderr.strip().splitlines()
+        message = detail[-1] if detail else "unknown conversion error"
+        raise RuntimeError(f"MarkItDown conversion failed: {message}")
+    return process.stdout
+
+
 def convert_single_file(upload, transcription_options: Options) -> dict:
     """Convert one uploaded file; always returns a per-file result dict."""
     original_name = upload.filename or "unnamed"
@@ -189,8 +193,7 @@ def convert_single_file(upload, transcription_options: Options) -> dict:
                 )
             markdown_text = render_markdown(transcript, transcription_options.include_timestamps)
         else:
-            result = converter.convert(str(conversion_path))
-            markdown_text = result.text_content
+            markdown_text = convert_with_markitdown_cli(conversion_path)
 
         if suffix in IMAGE_EXTENSIONS:
             ocr_text = extract_image_text(input_path)
