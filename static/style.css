@@ -576,6 +576,46 @@ html[data-theme="light"] .logo-plate {
   text-align: center;
 }
 
+/* ---------- Transcription settings ---------- */
+
+.transcription-settings {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-window);
+  box-shadow: var(--shadow-window);
+}
+
+.settings-heading { display: flex; justify-content: space-between; gap: 1rem; }
+.settings-heading h2 { margin: 0; font: 700 1.2rem var(--font-display); }
+.settings-heading p { margin: .25rem 0 0; color: var(--color-text-secondary); font: .78rem var(--font-mono); }
+.engine-options { border: 0; padding: 0; margin: 1rem 0; display: grid; gap: .55rem; }
+.engine-options legend { margin-bottom: .5rem; color: var(--color-text-secondary); font-size: .82rem; }
+.engine-option { display: flex; align-items: flex-start; gap: .65rem; padding: .75rem; border: 1px solid var(--color-border); border-radius: 10px; cursor: pointer; }
+.engine-option:has(input:checked) { border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
+.engine-option input { margin-top: .25rem; accent-color: var(--color-accent); }
+.engine-option > span, .engine-option span span, .engine-option small { display: block; }
+.engine-option strong { font-size: .9rem; }
+.engine-option em { margin-left: .35rem; color: var(--color-accent); font: 600 .67rem var(--font-mono); }
+.engine-option span span { margin-top: .18rem; color: var(--color-text-secondary); font-size: .78rem; }
+.engine-option small { margin-top: .2rem; color: var(--color-text-secondary); opacity: .75; font-family: var(--font-mono); }
+.engine-option.engine-unavailable { opacity: .58; cursor: not-allowed; }
+.unavailable-reason { color: var(--color-error) !important; }
+.additional-options { display: grid; grid-template-columns: minmax(130px, .6fr) 1.4fr; gap: .8rem; }
+.additional-options label { color: var(--color-text-secondary); font-size: .8rem; }
+.additional-options label > span { opacity: .7; }
+.additional-options select, .additional-options input[type="text"] { width: 100%; margin-top: .35rem; padding: .6rem .7rem; color: var(--color-text); background: var(--color-bg-deep); border: 1px solid var(--color-border); border-radius: 8px; }
+.toggle-field { grid-column: 1 / -1; display: flex; align-items: center; gap: .45rem; }
+.toggle-field input { accent-color: var(--color-accent); }
+.toggle-field small { margin-left: .4rem; opacity: .7; }
+.convert-files-btn { margin-top: 1rem; width: 100%; }
+
+@media (max-width: 600px) {
+  .additional-options { grid-template-columns: 1fr; }
+  .toggle-field { grid-column: auto; flex-wrap: wrap; }
+}
+
 /* ---------- Progress ---------- */
 
 .progress-section {

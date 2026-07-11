@@ -26,6 +26,22 @@
   const previewClose = document.getElementById("preview-close");
   const previewCopy = document.getElementById("preview-copy");
   const previewDownload = document.getElementById("preview-download");
+  const transcriptionSettings = document.getElementById("transcription-settings");
+  const selectedFilesSummary = document.getElementById("selected-files-summary");
+  const cancelSelection = document.getElementById("cancel-selection");
+  const convertFilesBtn = document.getElementById("convert-files-btn");
+  const languageSelect = document.getElementById("transcription-language");
+  const contextInput = document.getElementById("transcription-context");
+  const contextHelp = document.getElementById("context-help");
+  const timestampsInput = document.getElementById("include-timestamps");
+  const timestampsHelp = document.getElementById("timestamps-help");
+  const localEngine = document.getElementById("local-engine");
+  const localEngineOption = document.getElementById("local-engine-option");
+  const localStatusLabel = document.getElementById("local-status-label");
+  const localUnavailableReason = document.getElementById("local-unavailable-reason");
+
+  const MEDIA_EXTENSIONS = new Set(["mp3", "wav", "m4a", "aac", "flac", "ogg", "webm", "mp4"]);
+  let pendingFiles = [];
 
   let activePreviewId = null;
   let activePreviewMarkdown = "";
@@ -68,7 +84,7 @@
 
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
-      uploadFiles(fileInput.files);
+      selectFiles(fileInput.files);
       fileInput.value = "";
     }
   });
@@ -90,15 +106,74 @@
   dropZone.addEventListener("drop", (event) => {
     const files = event.dataTransfer ? event.dataTransfer.files : null;
     if (files && files.length > 0) {
-      uploadFiles(files);
+      selectFiles(files);
     }
   });
 
   /* ---------- Upload ---------- */
 
-  function uploadFiles(fileList) {
+  function containsMedia(files) {
+    return files.some((file) => MEDIA_EXTENSIONS.has((file.name.split(".").pop() || "").toLowerCase()));
+  }
+
+  function selectFiles(fileList) {
+    const files = Array.from(fileList);
+    if (!containsMedia(files)) {
+      uploadFiles(files);
+      return;
+    }
+    pendingFiles = files;
+    const mediaCount = files.filter((file) => containsMedia([file])).length;
+    selectedFilesSummary.textContent = `${files.length} file${files.length === 1 ? "" : "s"} selected · ${mediaCount} audio/video`;
+    transcriptionSettings.hidden = false;
+    transcriptionSettings.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function selectedEngine() {
+    return document.querySelector('input[name="transcription-engine"]:checked').value;
+  }
+
+  function updateTimestampControl() {
+    const engine = selectedEngine();
+    timestampsInput.disabled = engine === "openai";
+    if (engine === "openai") timestampsInput.checked = false;
+    if (engine === "openai_diarize") timestampsInput.checked = true;
+    timestampsHelp.textContent = engine === "openai" ? "Not available for GPT-4o Transcribe" : "Add [HH:MM:SS] to transcript segments";
+    contextInput.disabled = engine === "openai_diarize";
+    contextHelp.textContent = engine === "openai_diarize" ? "(not supported by diarization)" : "(optional)";
+  }
+
+  document.querySelectorAll('input[name="transcription-engine"]').forEach((input) => {
+    input.addEventListener("change", updateTimestampControl);
+  });
+
+  cancelSelection.addEventListener("click", () => {
+    pendingFiles = [];
+    transcriptionSettings.hidden = true;
+  });
+
+  convertFilesBtn.addEventListener("click", () => {
+    if (!pendingFiles.length) return;
+    const files = pendingFiles;
+    pendingFiles = [];
+    transcriptionSettings.hidden = true;
+    uploadFiles(files, {
+      engine: selectedEngine(),
+      language: languageSelect.value,
+      context: contextInput.value,
+      timestamps: timestampsInput.checked,
+    });
+  });
+
+  function uploadFiles(fileList, transcription = null) {
     const formData = new FormData();
     Array.from(fileList).forEach((file) => formData.append("files", file));
+    if (transcription) {
+      formData.append("transcription_engine", transcription.engine);
+      formData.append("transcription_language", transcription.language);
+      formData.append("transcription_context", transcription.context);
+      formData.append("include_timestamps", String(transcription.timestamps));
+    }
 
     showProgress(fileList.length);
 
@@ -458,7 +533,26 @@
 
   /* ---------- Init ---------- */
 
+  async function loadTranscriptionStatus() {
+    try {
+      const response = await fetch("/api/transcription/status");
+      if (!response.ok) throw new Error();
+      const status = await response.json();
+      localEngine.disabled = !status.local.available;
+      localEngineOption.classList.toggle("engine-unavailable", !status.local.available);
+      localStatusLabel.textContent = status.local.available ? "Private / Offline" : "Unavailable";
+      localUnavailableReason.textContent = status.local.unavailable_reason || "";
+    } catch {
+      localEngine.disabled = true;
+      localEngineOption.classList.add("engine-unavailable");
+      localStatusLabel.textContent = "Unavailable";
+      localUnavailableReason.textContent = "Status check failed";
+    }
+  }
+
   initTheme();
+  updateTimestampControl();
+  loadTranscriptionStatus();
   restoreResultHistory();
   updateEmptyState();
 })();

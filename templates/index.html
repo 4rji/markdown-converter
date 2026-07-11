@@ -52,7 +52,7 @@
         <li class="format-chip fc-8">.json</li>
         <li class="format-chip fc-9">.xml</li>
         <li class="format-chip fc-10">.png / .jpg</li>
-        <li class="format-chip fc-11">.mp3 / .wav / .mp4</li>
+        <li class="format-chip fc-11">.mp3 / .wav / .m4a / .mp4</li>
         <li class="format-chip fc-12">.zip</li>
         <li class="format-chip fc-13">.epub</li>
       </ul>
@@ -75,6 +75,49 @@
       <input id="file-input" type="file" multiple hidden>
     </section>
     <p class="drop-hint">⚠ Temporary session files — cleared after 30 minutes of inactivity.</p>
+
+    <section id="transcription-settings" class="transcription-settings" hidden aria-labelledby="transcription-title">
+      <div class="settings-heading">
+        <div>
+          <h2 id="transcription-title">Audio Transcription</h2>
+          <p id="selected-files-summary"></p>
+        </div>
+        <button id="cancel-selection" class="btn-icon" type="button" aria-label="Clear selected files">✕</button>
+      </div>
+      <fieldset class="engine-options">
+        <legend>Engine for this batch</legend>
+        <label class="engine-option">
+          <input type="radio" name="transcription-engine" value="openai" checked>
+          <span><strong>GPT-4o Transcribe <em>Recommended</em></strong><span>Fast, accurate cloud transcription.</span><small>gpt-4o-transcribe</small></span>
+        </label>
+        <label class="engine-option">
+          <input type="radio" name="transcription-engine" value="openai_diarize">
+          <span><strong>GPT-4o Transcribe Diarize <em>Identify Speakers</em></strong><span>Separates each speaker turn.</span><small>gpt-4o-transcribe-diarize</small></span>
+        </label>
+        <label id="local-engine-option" class="engine-option">
+          <input id="local-engine" type="radio" name="transcription-engine" value="local_whisper">
+          <span><strong>Local Whisper <em id="local-status-label">Checking…</em></strong><span>Private, offline transcription on this server.</span><small>large-v3-turbo · NVIDIA CUDA</small><span id="local-unavailable-reason" class="unavailable-reason"></span></span>
+        </label>
+      </fieldset>
+      <div class="additional-options">
+        <label>Language
+          <select id="transcription-language">
+            <option value="auto">Auto Detect</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+          </select>
+        </label>
+        <label class="context-field">Technical vocabulary/context <span id="context-help">(optional)</span>
+          <input id="transcription-context" type="text" maxlength="500" placeholder="Names, acronyms, or specialized terms">
+        </label>
+        <label class="toggle-field">
+          <input id="include-timestamps" type="checkbox">
+          <span>Timestamps</span>
+          <small id="timestamps-help">Not available for GPT-4o Transcribe</small>
+        </label>
+      </div>
+      <button id="convert-files-btn" class="btn btn-primary convert-files-btn" type="button">Convert Files</button>
+    </section>
 
     <section id="progress-section" class="progress-section" hidden>
       <div class="progress-bar-track">
@@ -103,7 +146,7 @@
     <div class="footer-notices">
 <div class="notice notice-info">
         <span class="notice-icon" aria-hidden="true">🔒</span>
-        <p class="notice-text">No AI involved. Conversion is 100% local — your files never leave this server.</p>
+        <p class="notice-text">Document conversion stays local. Audio is transcribed by OpenAI or Local Whisper, according to the engine you select.</p>
       </div>
     </div>
     <span class="footer-credit"><span class="hash">#</span><a href="https://4rji.com" target="_blank" rel="noopener noreferrer">by Havi</a></span>

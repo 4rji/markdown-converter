@@ -1,201 +1,109 @@
-# Local Whisper Setup on Ubuntu 24.04
+# Audio Transcription Setup on Pop!_OS 22.04
 
-This guide enables private, CPU-only transcription for WAV, G.711 mu-law WAV,
-MP3, M4A, and MP4 uploads. Audio is normalized by FFmpeg and transcribed by a
-local faster-whisper model. Uploaded media is never sent to Google, OpenAI, or
-any other transcription service.
+The converter offers two independent transcription paths:
 
-The recommended configuration for a 4-vCPU, 4 GB RAM virtual machine is:
+- OpenAI: `gpt-4o-transcribe` and `gpt-4o-transcribe-diarize`
+- Private/local: faster-whisper `large-v3-turbo` on NVIDIA CUDA
 
-- Model: multilingual `base` (`Systran/faster-whisper-base`), not `base.en`
-- Device: CPU
-- Compute type: INT8
-- OpenMP threads: 4
-- Concurrent audio jobs: 1 (enforced by the application)
+Missing cloud configuration does not affect local or document conversion.
+Missing local dependencies only disables the Local Whisper choice.
 
-## 1. Install System Packages
+## System and NVIDIA prerequisites
+
+These instructions target Pop!_OS 22.04 and an RTX 3070. Install the current
+System76 NVIDIA driver and verify that the GPU is visible:
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip ffmpeg libgomp1
+sudo apt install -y system76-driver-nvidia ffmpeg libgomp1 python3-venv
+nvidia-smi
+ffmpeg -version
 ```
 
-FFmpeg provides consistent decoding for telephony WAV codecs such as G.711
-mu-law. `libgomp1` provides the GNU OpenMP runtime used for CPU inference.
-
-## 2. Install the Application Dependencies
-
-These examples assume the application is installed at
-`/opt/markdown-converter` and runs as the `markdown-converter` user.
-
-To apply the server-side setup in one step from the repository root, run:
+Install the application dependencies in a virtual environment:
 
 ```bash
-sudo bash docs/install-local-whisper.sh
+python3 -m venv .venv
+. .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-Add `--download-model` if the server should also fetch the local Whisper model.
+The faster-whisper/CTranslate2 build must support the CUDA and cuDNN versions
+installed on the host. Confirm detection before starting the service:
 
 ```bash
-sudo -u markdown-converter python3 -m venv /opt/markdown-converter/.venv
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install --upgrade pip
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install -r /opt/markdown-converter/requirements.txt
+python -c 'import ctranslate2; print(ctranslate2.get_cuda_device_count())'
 ```
 
-## 3. Download the Model Once
+The result must be at least `1`.
 
-This is the only step that requires an outbound Internet connection. It
-downloads model files only; it does not upload any audio or application data.
+## Download large-v3-turbo once
 
-Create a model directory owned by the service account:
+Model download is an explicit administration step. The application never
+downloads a model during startup or a request.
 
 ```bash
-sudo install -d -o markdown-converter -g markdown-converter /opt/models/faster-whisper-base
+python -m pip install huggingface_hub
+huggingface-cli download Systran/faster-whisper-large-v3-turbo \
+  --local-dir /srv/models/faster-whisper-large-v3-turbo
 ```
 
-Install the Hugging Face CLI in the application virtual environment:
+You may use another compatible CTranslate2 `large-v3-turbo` repository. Set
+`WHISPER_MODEL_PATH` to its local directory; do not commit a machine-specific
+path or secret to the repository.
 
 ```bash
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/pip install --upgrade huggingface_hub
+export WHISPER_MODEL_PATH=/srv/models/faster-whisper-large-v3-turbo
 ```
 
-Download the multilingual CTranslate2 `base` model into the fixed local
-directory:
+At first use, the app loads that directory with `device="cuda"`,
+`compute_type="float16"`, and `local_files_only=True`. The successful model is
+cached in memory. Transcription uses VAD and local jobs are serialized.
+
+## Configure OpenAI (optional)
+
+Set the API key only in the server environment or secret manager:
 
 ```bash
-sudo -u markdown-converter /opt/markdown-converter/.venv/bin/hf download Systran/faster-whisper-base --local-dir /opt/models/faster-whisper-base
+export OPENAI_API_KEY='your-key-here'
 ```
 
-Confirm that the model directory contains files such as `config.json`,
-`model.bin`, `tokenizer.json`, and `vocabulary.txt`:
+Never put the value in source control or frontend configuration. The browser
+does not receive the key. When the key is absent, document conversion and Local
+Whisper continue to work; choosing a GPT-4o engine returns a configuration
+error for the affected audio file.
 
-```bash
-sudo -u markdown-converter find /opt/models/faster-whisper-base -maxdepth 1 -type f -printf '%f\n' | sort
-```
-
-The application passes an absolute directory path to faster-whisper and sets
-offline environment flags at startup. It never uses a model name that could
-trigger an automatic runtime download.
-
-## 4. Optional: Add Swap
-
-Four GB of swap is recommended for a VM with only 4 GB of RAM. It provides a
-safety margin during model loading and large document conversions.
-
-```bash
-sudo fallocate -l 4G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
-
-Verify it:
-
-```bash
-swapon --show
-free -h
-```
-
-Skip the creation commands if the server already has sufficient swap.
-
-## 5. Configure systemd
-
-Edit the existing unit:
-
-```bash
-sudo nano /etc/systemd/system/markdown-converter.service
-```
-
-The service section should include these settings:
+For systemd, add environment references using your deployment's secret-loading
+method, then restart the service. A minimal non-secret configuration is:
 
 ```ini
 [Service]
-Type=simple
-User=markdown-converter
-Group=markdown-converter
-WorkingDirectory=/opt/markdown-converter
-Environment=PYTHONUNBUFFERED=1
-Environment=MAX_UPLOAD_SIZE_MB=500
-Environment=WHISPER_MODEL_PATH=/opt/models/faster-whisper-base
+Environment=WHISPER_MODEL_PATH=/srv/models/faster-whisper-large-v3-turbo
 Environment=WHISPER_BEAM_SIZE=5
 Environment=FFMPEG_TIMEOUT_SECONDS=600
-Environment=OMP_NUM_THREADS=4
-ExecStart=/opt/markdown-converter/.venv/bin/python /opt/markdown-converter/app.py
-Restart=always
-RestartSec=5
 ```
 
-Do not configure multiple application workers on this VM. The application
-serializes audio normalization and transcription with an in-process lock, so
-only one audio job uses CPU and memory at a time.
+## Verify capabilities
 
-Reload and restart systemd after editing the unit:
+Start the application and inspect the lightweight status endpoint:
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl restart markdown-converter
-sudo systemctl status markdown-converter --no-pager
+curl -s http://127.0.0.1:8082/api/transcription/status
 ```
 
-## 6. Test Local Transcription
+This performs dependency, path, FFmpeg, and CUDA checks without loading the
+complete model. Upload a short audio file and select Local Whisper to verify the
+first model load. If loading fails, the response contains a per-file error and
+Local Whisper remains unavailable until the process is restarted.
 
-Upload a short WAV or MP3 from the web interface, or test the endpoint directly:
+Cloud audio is normalized to compressed MP3. Files still above the OpenAI
+25 MB input limit are split into ordered chunks and reassembled. Temporary
+normalized audio and chunks are removed after processing.
 
-```bash
-curl -sS -F 'files=@/path/to/test.wav' http://127.0.0.1:8082/convert
-```
+## Privacy notes
 
-View logs while testing:
-
-```bash
-sudo journalctl -u markdown-converter -f
-```
-
-The first audio request loads the model and therefore takes longer. Later
-requests reuse the same in-memory model.
-
-## 7. Optional Language Setting
-
-Language detection is automatic by default. To force Spanish, add this to the
-systemd service:
-
-```ini
-Environment=WHISPER_LANGUAGE=es
-```
-
-Run `systemctl daemon-reload` and restart the service after changing it.
-
-## Troubleshooting
-
-### Local model directory not found
-
-Confirm the path and service-user permissions:
-
-```bash
-sudo -u markdown-converter test -r /opt/models/faster-whisper-base/model.bin
-```
-
-### FFmpeg is missing
-
-```bash
-sudo apt install -y ffmpeg
-```
-
-### The service is killed while loading the model
-
-Check memory and swap with `free -h`, then inspect the kernel log:
-
-```bash
-sudo journalctl -k -g 'Out of memory\|Killed process'
-```
-
-Use the multilingual `base` model, keep `OMP_NUM_THREADS=4`, and ensure only one
-service process is running.
-
-### Runtime privacy
-
-The browser is restricted to same-origin connections by Content Security
-Policy. MarkItDown outbound requests are blocked, its remote audio converter is
-unregistered, and faster-whisper is loaded with `local_files_only=True` plus
-offline environment flags.
+- Document conversion remains local.
+- Local Whisper audio is never submitted to a transcription service.
+- GPT-4o audio is sent to OpenAI only after the user explicitly selects that engine.
+- Offline flags prevent Hugging Face model downloads at runtime.

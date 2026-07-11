@@ -22,7 +22,7 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 - **Web content:** HTML files
 - **Images:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`
 - **Archives:** `.zip`, `.epub`
-- **Audio/video transcription:** `.mp3`, `.wav`, `.m4a`, `.mp4`
+- **Audio/video transcription:** `.mp3`, `.wav`, `.m4a`, `.aac`, `.flac`, `.ogg`, `.webm`, `.mp4`
 
 ## Features
 
@@ -34,7 +34,7 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 🕘 **Session History** — Keep converted files in the browser tab while they are available  
 🔒 **Privacy First** — Temporary files are auto-deleted (30 min timeout)  
 🤖 **OCR Support** — Extracts text from images using Tesseract  
-🎙️ **Private Transcription** — Runs faster-whisper locally with no remote API
+🎙️ **Selectable Transcription** — GPT-4o, speaker diarization, or private Local Whisper
 
 ## Installation
 
@@ -43,10 +43,10 @@ Markdown is the language LLMs understand best. Converting your files to Markdown
 - Python 3.9+
 - `pip` or your preferred Python package manager
 - FFmpeg for audio normalization, including G.711 telephony WAV files
-- A local faster-whisper model for audio and video transcription
+- An `OPENAI_API_KEY` for cloud audio transcription and/or a local faster-whisper model
 - (Optional) Tesseract for OCR support: `brew install tesseract` (macOS) or `apt-get install tesseract-ocr` (Linux)
 
-For Ubuntu CPU-only installation and model download instructions, see
+For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
 [Local Whisper Setup](docs/local-whisper-setup.md).
 
 ### Quick Start
@@ -86,7 +86,7 @@ MAX_UPLOAD_SIZE_MB=1000 python app.py
 ## Usage
 
 1. **Upload files** by dragging & dropping or clicking "Browse Files"
-2. **Wait for conversion** — Processing happens instantly
+2. **For audio/video, choose an engine and options**, then click "Convert Files"
 3. **Preview or copy** the Markdown content in the built-in viewer
 4. **Download** your converted files as `.md` files when needed
 
@@ -99,7 +99,8 @@ Built with:
 
 - **Flask** — Lightweight Python web framework
 - **MarkItDown** — Powerful document-to-Markdown converter
-- **faster-whisper** — Local CPU speech-to-text transcription
+- **OpenAI Python SDK** — GPT-4o transcription and speaker diarization
+- **faster-whisper** — Private CUDA speech-to-text transcription
 - **FFmpeg** — Audio extraction and codec normalization
 - **Tesseract OCR** — Optional image text extraction
 - **Vanilla JavaScript** — No build step required
@@ -108,7 +109,7 @@ Built with:
 ## How It Works
 
 1. **Upload** — Files are securely uploaded and stored in temporary directories
-2. **Convert** — MarkItDown handles documents; FFmpeg and local Whisper handle audio
+2. **Convert** — MarkItDown handles documents; FFmpeg prepares audio for the selected OpenAI or Local Whisper engine
 3. **Enhance** — For images, optional OCR extracts visible text
 4. **Use** — Converted Markdown can be previewed, copied, or downloaded
 5. **Cleanup** — Temporary files remain available during the session and are automatically deleted after timeout
@@ -117,23 +118,23 @@ Built with:
 
 - Files are stored in temporary directories only
 - Automatic cleanup after 30 minutes
-- No file contents are persisted permanently or shared
-- No external browser assets or remote transcription services are used
+- No file contents are persisted permanently
+- Documents stay local; audio is sent to OpenAI only when a GPT-4o engine is selected
 - Local Whisper loads only the model directory configured on the server
-- Audio normalization and transcription are limited to one job at a time
+- Local GPU transcription jobs are limited to one at a time
 - Maximum file size: 500 MB per file by default (configurable with `MAX_UPLOAD_SIZE_MB`)
 - Browser-friendly download headers
 
-Direct audio and video uploads bypass MarkItDown's remote audio converter and
-use only the locally configured faster-whisper model. The remote converter is
-also unregistered, so audio inside ZIP archives cannot invoke it.
+Direct audio and video uploads bypass MarkItDown's audio converter and use only
+the explicitly selected engine. Local Whisper never makes a transcription API
+request. The MarkItDown remote audio converter remains unregistered.
 
 ## Limitations
 
 - File size limited to 500 MB by default
 - Some complex layouts may lose formatting details
 - OCR quality depends on image clarity
-- Audio transcription requires FFmpeg and a configured local model directory
+- Audio transcription requires FFmpeg plus either `OPENAI_API_KEY` or a configured CUDA local model
 - Unsupported file types will return an error
 
 ## Development
