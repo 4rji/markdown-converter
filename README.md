@@ -17,7 +17,29 @@ Convierte cualquier documento a Markdown limpio y listo para LLMs: PDF, Office, 
 - Transcripción cloud: `OPENAI_API_KEY`
 - OCR opcional: `brew install tesseract` (macOS) / `apt-get install tesseract-ocr` (Linux)
 
-### Opción A — Manual / desarrollo
+### Opción A — Producción con systemd (recomendada)
+
+Un solo comando desde el repositorio (Pop!_OS/Ubuntu):
+
+```bash
+git clone <repository-url> && cd markdown-converter
+sudo ./install-systemd-service_new.sh
+```
+
+Instala todo en `/opt/markdown-converter`: dependencias, usuario de servicio, modelo, `.env` y servicio habilitado al boot. Sin GPU:
+
+```bash
+sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
+```
+
+Clave OpenAI después de instalar:
+
+```bash
+sudo nano /opt/markdown-converter/.env
+sudo systemctl restart markdown-converter
+```
+
+### Opción B — Manual / desarrollo
 
 El orden importa: ambos scripts comparten `.venv`.
 
@@ -35,27 +57,6 @@ La aplicación lee `.env` sola al arrancar (incluido `LD_LIBRARY_PATH` para CUDA
 
 ```bash
 set -a; source .env; set +a
-```
-
-### Opción B — Producción con systemd
-
-Un solo comando desde el repositorio (Pop!_OS/Ubuntu):
-
-```bash
-sudo ./install-systemd-service_new.sh
-```
-
-Instala todo en `/opt/markdown-converter`: dependencias, usuario de servicio, modelo, `.env` y servicio habilitado al boot. Sin GPU:
-
-```bash
-sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
-```
-
-Clave OpenAI después de instalar:
-
-```bash
-sudo nano /opt/markdown-converter/.env
-sudo systemctl restart markdown-converter
 ```
 
 ### Verificar
@@ -79,7 +80,29 @@ curl -s http://127.0.0.1:8082/api/transcription/status
 - Cloud transcription: `OPENAI_API_KEY`
 - Optional OCR: `brew install tesseract` (macOS) / `apt-get install tesseract-ocr` (Linux)
 
-### Option A — Manual / development
+### Option A — Production with systemd (recommended)
+
+One command from the repository (Pop!_OS/Ubuntu):
+
+```bash
+git clone <repository-url> && cd markdown-converter
+sudo ./install-systemd-service_new.sh
+```
+
+Installs everything into `/opt/markdown-converter`: dependencies, service account, model, `.env`, and the service enabled at boot. Without a GPU:
+
+```bash
+sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
+```
+
+OpenAI key after installation:
+
+```bash
+sudo nano /opt/markdown-converter/.env
+sudo systemctl restart markdown-converter
+```
+
+### Option B — Manual / development
 
 Order matters: both scripts share the same `.venv`.
 
@@ -97,27 +120,6 @@ The app reads `.env` by itself at startup (including `LD_LIBRARY_PATH` for CUDA)
 
 ```bash
 set -a; source .env; set +a
-```
-
-### Option B — Production with systemd
-
-One command from the repository (Pop!_OS/Ubuntu):
-
-```bash
-sudo ./install-systemd-service_new.sh
-```
-
-Installs everything into `/opt/markdown-converter`: dependencies, service account, model, `.env`, and the service enabled at boot. Without a GPU:
-
-```bash
-sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
-```
-
-OpenAI key after installation:
-
-```bash
-sudo nano /opt/markdown-converter/.env
-sudo systemctl restart markdown-converter
 ```
 
 ### Verify
