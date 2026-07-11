@@ -62,14 +62,27 @@ log "Installing Faster-Whisper and CUDA runtime libraries"
 
 log "Locating CUDA libraries"
 CUDA_LIB_PATH="$("$VENV_DIR/bin/python" - <<'PY'
+import importlib
 import os
-import nvidia.cublas.lib
-import nvidia.cudnn.lib
+
+
+def package_directory(module_name):
+    module = importlib.import_module(module_name)
+    package_paths = list(getattr(module, "__path__", []))
+    if package_paths:
+        return os.fspath(package_paths[0])
+
+    module_file = getattr(module, "__file__", None)
+    if module_file:
+        return os.path.dirname(os.fspath(module_file))
+
+    raise RuntimeError(f"Could not locate CUDA package directory: {module_name}")
+
 
 print(
-    os.path.dirname(nvidia.cublas.lib.__file__)
+    package_directory("nvidia.cublas.lib")
     + ":"
-    + os.path.dirname(nvidia.cudnn.lib.__file__)
+    + package_directory("nvidia.cudnn.lib")
 )
 PY
 )"
