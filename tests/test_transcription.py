@@ -6,6 +6,7 @@ from transcription import (
     Segment,
     Transcript,
     render_markdown,
+    transcription_status,
     validate_options,
 )
 
@@ -33,6 +34,11 @@ class TranscriptionTests(unittest.TestCase):
     def test_local_markdown_keeps_segments_as_paragraphs(self):
         result = Transcript("One Two", "en", LOCAL_ENGINE, "large-v3-turbo", [Segment("One", 0, 1), Segment("Two", 2, 3)])
         self.assertIn("One\n\nTwo", render_markdown(result, False))
+
+    def test_status_exposes_local_runtime_state(self):
+        local = transcription_status()["local"]
+        self.assertIn("loaded", local)
+        self.assertIn("state", local)
 
 
 if __name__ == "__main__":

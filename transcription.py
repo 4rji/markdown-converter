@@ -53,6 +53,13 @@ class Options:
 _model = None
 _model_lock = threading.Lock()
 _local_failure: str | None = None
+_local_state = "not_loaded"
+
+
+def _set_local_state(state: str) -> None:
+    global _local_state
+    _local_state = state
+    print(f"[transcription] Local Whisper state: {state}", flush=True)
 
 
 def validate_options(form: Any) -> Options:
@@ -102,6 +109,8 @@ def _status(available: bool, device: str | None, reason: str | None) -> dict[str
         "available": available,
         "model": LOCAL_MODEL_NAME,
         "device": device,
+        "loaded": _model is not None,
+        "state": _local_state,
         "unavailable_reason": reason,
     }
 
@@ -225,29 +234,45 @@ def _get_local_model():
     with _model_lock:
         if _model is not None:
             return _model
+        _set_local_state("loading")
         try:
             from faster_whisper import WhisperModel
             path = str(Path(os.environ["WHISPER_MODEL_PATH"]).expanduser().resolve())
             _model = WhisperModel(path, device="cuda", compute_type="float16", local_files_only=True)
         except Exception as exc:
             _local_failure = f"Model load failed: {str(exc) or type(exc).__name__}"
+            _set_local_state("error")
             raise RuntimeError(f"Local Whisper is unavailable: {_local_failure}") from exc
+        _set_local_state("ready")
     return _model
 
 
 def transcribe_local(normalized: Path, options: Options, beam_size: int) -> Transcript:
     model = _get_local_model()
-    segments_iter, info = model.transcribe(
-        str(normalized), language=LANGUAGES[options.language], initial_prompt=options.context or None,
-        beam_size=beam_size, vad_filter=True,
-    )
-    segments = [Segment(s.text.strip(), float(s.start), float(s.end)) for s in segments_iter if s.text.strip()]
+    _set_local_state("transcribing")
+    try:
+        segments_iter, info = model.transcribe(
+            str(normalized), language=LANGUAGES[options.language], initial_prompt=options.context or None,
+            beam_size=beam_size, vad_filter=True,
+        )
+        # faster-whisper is lazy: iterating the generator performs the actual
+        # CUDA inference. Do not return before fully consuming it.
+        segments = [Segment(s.text.strip(), float(s.start), float(s.end)) for s in segments_iter if s.text.strip()]
+    finally:
+        _set_local_state("ready")
     text = " ".join(segment.text for segment in segments) or "[No speech detected]"
     return Transcript(text, getattr(info, "language", None), LOCAL_ENGINE, LOCAL_MODEL_NAME, segments)
 
 
 def transcribe(input_path: Path, work_dir: Path, options: Options, timeout: int, beam_size: int) -> Transcript:
-    normalized = normalize_audio(input_path, work_dir, timeout)
+    if options.engine == LOCAL_ENGINE:
+        _set_local_state("normalizing")
+    try:
+        normalized = normalize_audio(input_path, work_dir, timeout)
+    except Exception:
+        if options.engine == LOCAL_ENGINE:
+            _set_local_state("ready" if _model is not None else "not_loaded")
+        raise
     if options.engine == LOCAL_ENGINE:
         return transcribe_local(normalized, options, beam_size)
     return transcribe_cloud(normalized, work_dir, options, timeout)

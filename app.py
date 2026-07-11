@@ -200,6 +200,9 @@ def convert_single_file(upload, transcription_options: Options) -> dict:
             "original_name": original_name,
             "md_name": md_name,
             "status": "ok",
+            "transcription_engine": (
+                transcription_options.engine if suffix in AUDIO_EXTENSIONS else None
+            ),
         }
     except Exception as exc:  # markitdown raises many exception types
         shutil.rmtree(directory, ignore_errors=True)
@@ -209,6 +212,7 @@ def convert_single_file(upload, transcription_options: Options) -> dict:
             "md_name": None,
             "status": "error",
             "error": str(exc) or "Unsupported file type",
+            "transcription_engine": transcription_options.engine,
         }
 
 
