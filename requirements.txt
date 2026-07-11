@@ -1,5 +1,5 @@
 flask>=3.0
-markitdown[docx,outlook,pdf,pptx,xls,xlsx]==0.0.2
+markitdown==0.0.2
 faster-whisper
 openai>=1.109
 pytesseract  # local OCR for images; requires the tesseract binary (brew install tesseract)

@@ -105,10 +105,13 @@ for label, module_name in converters.items():
 print(f"MarkItDown version: {version('markitdown')}")
 PY
 
-smoke_output="$(
-  printf 'MarkItDown installation check\n' \
-    | sudo -u "$APP_USER" -H "$MARKITDOWN_CLI"
-)"
+smoke_dir="$(mktemp -d)"
+smoke_input="$smoke_dir/markitdown-smoke.txt"
+printf 'MarkItDown installation check\n' > "$smoke_input"
+chown "$APP_USER:$APP_GROUP" "$smoke_input"
+smoke_output="$(sudo -u "$APP_USER" -H "$MARKITDOWN_CLI" "$smoke_input")"
+rm -f "$smoke_input"
+rmdir "$smoke_dir"
 [[ "$smoke_output" == *"MarkItDown installation check"* ]] \
   || fail "MarkItDown CLI smoke conversion failed"
 log "MarkItDown CLI validated at $MARKITDOWN_CLI"
