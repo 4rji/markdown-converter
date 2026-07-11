@@ -57,30 +57,85 @@ For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
    cd markdown-converter
    ```
 
-2. **Install dependencies:**
+2. **Install the application dependencies:**
+
    ```bash
    ./script -i
    ```
-   Or manually:
+
+   This creates or reuses the repository's `.venv` environment and installs
+   `requirements.txt` into it.
+
+3. **Install Local Whisper with NVIDIA CUDA (recommended for private audio):**
+
    ```bash
-   pip install -r requirements.txt
+   ./install_whisper_local.sh
    ```
 
-3. **Run the application:**
+   Run this after `./script -i`. Both scripts use the same `.venv`. The Local
+   Whisper installer checks the NVIDIA GPU, installs the CUDA runtime packages,
+   downloads `large-v3-turbo`, validates a CUDA/float16 model load, and writes
+   the required paths to `.env`.
+
+   This step requires Pop!_OS/Ubuntu, `sudo`, and a working NVIDIA driver. It is
+   optional if you only intend to use document conversion or OpenAI audio
+   transcription.
+
+4. **Load the Local Whisper configuration:**
+
    ```bash
-   python app.py
+   set -a
+   source .env
+   set +a
    ```
 
-4. **Open your browser:**
+   Repeat this in each new shell before starting the application. For a systemd
+   deployment, configure the service to read this file with `EnvironmentFile=`.
+
+5. **Configure OpenAI transcription (optional):**
+
+   ```bash
+   export OPENAI_API_KEY="your-key-here"
+   ```
+
+   Keep the real key in the server environment or a secret manager. Do not add
+   it to the repository.
+
+6. **Run the application using the shared environment:**
+
+   ```bash
+   .venv/bin/python app.py
+   ```
+
+7. **Open your browser:**
+
    ```
    http://SERVER_IP:8082
    ```
+
+The complete Local Whisper installation sequence is therefore:
+
+```bash
+./script -i
+./install_whisper_local.sh
+set -a
+source .env
+set +a
+.venv/bin/python app.py
+```
+
+To install the Python dependencies without the helper script, use:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
 
 The upload limit defaults to 500 MB per file. Override it when starting the
 server if needed:
 
 ```bash
-MAX_UPLOAD_SIZE_MB=1000 python app.py
+MAX_UPLOAD_SIZE_MB=1000 .venv/bin/python app.py
 ```
 
 ## Usage

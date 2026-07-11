@@ -4,3 +4,5 @@ __pycache__/app.cpython-313.pyc
 .atl/skill-registry.md
 .claude/settings.local.json
 audiofail.wav
+.venv/
+.env
