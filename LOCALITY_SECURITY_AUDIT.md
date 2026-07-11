@@ -6,7 +6,7 @@
 > so the subprocess-based implementation requires a new network-locality audit.
 
 **Audit date:** July 10, 2026  
-**Project:** DigiTech Markdown Converter  
+**Project:** Markdown Converter
 **Result:** Passed, with the qualifications documented below
 
 ## Objective

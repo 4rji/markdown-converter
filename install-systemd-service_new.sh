@@ -108,7 +108,7 @@ PY
 smoke_dir="$(mktemp -d)"
 smoke_input="$smoke_dir/markitdown-smoke.txt"
 printf 'MarkItDown installation check\n' > "$smoke_input"
-chown "$APP_USER:$APP_GROUP" "$smoke_input"
+chown "$APP_USER:$APP_GROUP" "$smoke_dir" "$smoke_input"
 smoke_output="$(sudo -u "$APP_USER" -H "$MARKITDOWN_CLI" "$smoke_input")"
 rm -f "$smoke_input"
 rmdir "$smoke_dir"
@@ -270,7 +270,7 @@ fi
 log "Writing the systemd unit"
 cat > "$SERVICE_PATH" <<EOF
 [Unit]
-Description=DigiTech Markdown Converter
+Description=Markdown Converter
 After=network-online.target
 Wants=network-online.target
 

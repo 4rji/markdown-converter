@@ -1,10 +1,10 @@
-/* DigiTech Markdown Converter — drag & drop, upload, preview, download */
+/* Markdown Converter - drag & drop, upload, preview, download */
 
 (() => {
   "use strict";
 
-  const THEME_STORAGE_KEY = "digi-theme";
-  const HISTORY_STORAGE_KEY = "digi-result-history";
+  const THEME_STORAGE_KEY = "markdown-converter-theme";
+  const HISTORY_STORAGE_KEY = "markdown-converter-result-history";
   const HISTORY_LIMIT = 50;
   const DEFAULT_THEME = "dark";
 

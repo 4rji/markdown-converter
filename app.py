@@ -1,4 +1,4 @@
-"""DigiTech Markdown Converter — Flask server.
+"""Markdown Converter Flask server.
 
 Converts uploaded files to Markdown using the markitdown library.
 Converted files live in temp directories and are cleaned up after

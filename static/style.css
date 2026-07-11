@@ -1,5 +1,5 @@
-/* DigiTech Markdown Converter — "the converter that looks like Markdown"
-   Editorial/terminal aesthetic on the DIGI brand palette. Dark by default. */
+/* Markdown Converter - "the converter that looks like Markdown"
+   Editorial/terminal aesthetic. Dark by default. */
 
 :root,
 html[data-theme="dark"] {
@@ -177,21 +177,13 @@ html[data-theme="light"] .bg-glow {
 .logo-plate {
   display: inline-flex;
   align-items: center;
-  background: #FFFFFF;
-  border: 1px solid var(--color-border-soft);
-  border-radius: 10px;
-  padding: 4px 12px;
-  box-shadow: 0 2px 10px rgba(4, 16, 26, 0.25);
-}
-
-html[data-theme="light"] .logo-plate {
-  background: #F8FAF5;
-  box-shadow: 0 2px 12px rgba(27, 73, 101, 0.16);
 }
 
 .header-logo {
-  height: 42px;
+  height: 64px;
   width: auto;
+  max-width: min(58vw, 300px);
+  object-fit: contain;
   display: block;
 }
 
@@ -286,12 +278,16 @@ html[data-theme="light"] .logo-plate {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+html[data-theme="light"] .format-chip {
+  background: #14374F;
+}
+
 .format-chip:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Each chip gets its own color from the DIGI palette + extensions */
+/* Each chip gets its own color from the interface palette. */
 .fc-1  { color: #84C361; border: 1px solid rgba(132,195,97,.35); }
 .fc-2  { color: #5BB8E8; border: 1px solid rgba(91,184,232,.35); }
 .fc-3  { color: #F4A261; border: 1px solid rgba(244,162,97,.35); }
@@ -1142,7 +1138,8 @@ html[data-theme="light"] .preview-content {
   }
 
   .header-logo {
-    height: 32px;
+    height: 44px;
+    max-width: calc(100vw - 100px);
   }
 
   .main {

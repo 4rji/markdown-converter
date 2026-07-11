@@ -1,8 +1,8 @@
-# DigiTech Markdown Converter User Manual
+# Markdown Converter User Manual
 
 ## 1. Overview
 
-DigiTech Markdown Converter turns supported files into clean Markdown files.
+Markdown Converter turns supported files into clean Markdown files.
 You can upload one file or several files at once, inspect the converted content,
 copy it, or download it as a `.md` file.
 
