@@ -2,291 +2,175 @@
 
 **Anything in. Markdown out.**
 
-Transform any document into clean, LLM-friendly Markdown. Convert PDFs, Office documents, images, and more with a single click.
+Convierte cualquier documento a Markdown limpio y listo para LLMs: PDF, Office, imágenes (OCR), archivos y audio/video (transcripción con GPT-4o o Whisper local privado).
 
 ![Markdown Converter App](./app.webp)
 
-## Why Markdown?
+---
 
-Markdown is the language LLMs understand best. Converting your files to Markdown:
+## Instalación (Español)
 
-- **Strips away layout noise** — Removes formatting clutter and preserves clean structure
-- **Improves accuracy** — Models like ChatGPT and Claude read your content more accurately
-- **Saves tokens** — Use fewer tokens in API calls, reducing costs
-- **Gets better answers** — Cleaner input leads to higher-quality responses from AI models
+### Requisitos
 
-## Supported File Formats
+- Python 3.9+ y FFmpeg
+- Whisper local: Pop!_OS/Ubuntu con driver NVIDIA
+- Transcripción cloud: `OPENAI_API_KEY`
+- OCR opcional: `brew install tesseract` (macOS) / `apt-get install tesseract-ocr` (Linux)
 
-- **Documents:** `.pdf`, `.docx`, `.pptx`, `.xlsx`, `.html`, `.txt`, `.csv`, `.json`, `.xml`
-- **Office formats:** Microsoft Word, Excel, PowerPoint
-- **Web content:** HTML files
-- **Images:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`
-- **Archives:** `.zip`, `.epub`
-- **Audio/video transcription:** `.mp3`, `.wav`, `.m4a`, `.aac`, `.flac`, `.ogg`, `.webm`, `.mp4`
+### Opción A — Manual / desarrollo
 
-## Features
-
-✨ **Drag & Drop Interface** — Drop files directly or browse your computer  
-🔄 **Batch Processing** — Convert multiple files at once  
-👁️ **Live Preview** — See Markdown before downloading  
-📋 **Copy Markdown** — Copy converted text without downloading  
-💾 **Instant Download** — Get your converted files immediately  
-🕘 **Session History** — Keep converted files in the browser tab while they are available  
-🔒 **Privacy First** — Temporary files are auto-deleted (30 min timeout)  
-🤖 **OCR Support** — Extracts text from images using Tesseract  
-🎙️ **Selectable Transcription** — GPT-4o, speaker diarization, or private Local Whisper
-
-## Installation
-
-### Prerequisites
-
-- Python 3.9+
-- `pip` or your preferred Python package manager
-- FFmpeg for audio normalization, including G.711 telephony WAV files
-- An `OPENAI_API_KEY` for cloud audio transcription and/or a local faster-whisper model
-- (Optional) Tesseract for OCR support: `brew install tesseract` (macOS) or `apt-get install tesseract-ocr` (Linux)
-
-For Pop!_OS, NVIDIA CUDA, and local model setup instructions, see
-[Local Whisper Setup](docs/local-whisper-setup.md).
-
-### Quick Start
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd markdown-converter
-   ```
-
-2. **Install the application dependencies:**
-
-   ```bash
-   ./script -i
-   ```
-
-   This creates or reuses the repository's `.venv` environment and installs
-   `requirements.txt` into it. Run this command as your normal user—do not use
-   `sudo`. The Local Whisper installer invokes `sudo` itself only for the
-   system packages and model directory that require it. On Ubuntu/Pop!_OS, the
-   script detects the active Python version and installs both `python3-venv` and
-   its version-specific package, such as `python3.10-venv`, when needed.
-
-3. **Install Local Whisper with NVIDIA CUDA (recommended for private audio):**
-
-   ```bash
-   ./install_whisper_local.sh
-   ```
-
-   Run this after `./script -i`. Both scripts use the same `.venv`. The Local
-   Whisper installer checks the NVIDIA GPU, installs the CUDA runtime packages,
-   downloads `large-v3-turbo`, validates a CUDA/float16 model load, and writes
-   the required paths to `.env`.
-
-   This step requires Pop!_OS/Ubuntu, `sudo`, and a working NVIDIA driver. It is
-   optional if you only intend to use document conversion or OpenAI audio
-   transcription.
-
-4. **Local Whisper configuration loads automatically:**
-
-   The application reads `.env` at startup, including `LD_LIBRARY_PATH` for
-   the CUDA libraries, so no manual `source .env` is needed before running
-   it. Sourcing the file is only required for manual `faster-whisper`
-   commands outside the app:
-
-   ```bash
-   set -a
-   source .env
-   set +a
-   ```
-
-   For a systemd deployment, the service reads this file with
-   `EnvironmentFile=`; variables set by systemd take precedence over `.env`.
-
-5. **Configure OpenAI transcription (optional):**
-
-   The Local Whisper installer creates `.env`. Open that file and add the
-   server-side OpenAI key:
-
-   ```bash
-   nano .env
-   ```
-
-   Add this line, replacing the placeholder with the real value:
-
-   ```dotenv
-   OPENAI_API_KEY=replace_with_your_openai_api_key
-   ```
-
-   See [`.env.example`](.env.example) for all supported variables. For an
-   installation without Local Whisper, create the file from the example:
-
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
-
-   Keep the real key only in `.env`, the server environment, or a secret
-   manager. `.env` is ignored by Git; never put the real key in
-   `.env.example` or commit it to the repository.
-
-6. **Run the application using the shared environment:**
-
-   ```bash
-   .venv/bin/python app.py
-   ```
-
-7. **Open your browser:**
-
-   ```
-   http://SERVER_IP:8082
-   ```
-
-The complete Local Whisper installation sequence is therefore:
+El orden importa: ambos scripts comparten `.venv`.
 
 ```bash
-./script -i
-./install_whisper_local.sh
-.venv/bin/python app.py
+git clone <repository-url> && cd markdown-converter
+./script -i                    # 1. crea .venv + dependencias (sin sudo)
+./install_whisper_local.sh     # 2. GPU: CUDA + modelo large-v3-turbo, escribe .env
+nano .env                      # 3. opcional: OPENAI_API_KEY para cloud
+.venv/bin/python app.py        # 4. arranca; carga .env automáticamente
 ```
 
-To install the Python dependencies without the helper script, use:
+Abre `http://SERVER_IP:8082`. El paso 2 es opcional si solo conviertes documentos o usas transcripción OpenAI; sin él, crea `.env` con `cp .env.example .env`.
+
+La aplicación lee `.env` sola al arrancar (incluido `LD_LIBRARY_PATH` para CUDA); no hace falta `source .env`. Solo se necesita para comandos manuales de `faster-whisper` fuera de la app:
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+set -a; source .env; set +a
 ```
 
-The upload limit defaults to 500 MB per file. Override it when starting the
-server if needed:
+### Opción B — Producción con systemd
 
-```bash
-MAX_UPLOAD_SIZE_MB=1000 .venv/bin/python app.py
-```
-
-### Production installation with systemd
-
-On Pop!_OS/Ubuntu, the production installer can perform the complete deployment
-in one command from the repository:
+Un solo comando desde el repositorio (Pop!_OS/Ubuntu):
 
 ```bash
 sudo ./install-systemd-service_new.sh
 ```
 
-It synchronizes the application into `/opt/markdown-converter`, creates a
-dedicated `markdown-converter` account, installs the application and CUDA
-dependencies into `/opt/markdown-converter/.venv`, reuses or downloads
-`large-v3-turbo`, copies the current `.env`, corrects its deployment-specific
-CUDA paths, and enables the service at boot.
+Instala todo en `/opt/markdown-converter`: dependencias, usuario de servicio, modelo, `.env` y servicio habilitado al boot. Sin GPU:
 
-The source repository is retained; the installer copies rather than deletes it.
-An existing `OPENAI_API_KEY` is preserved. To add or change the key after
-installation:
+```bash
+sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
+```
+
+Clave OpenAI después de instalar:
 
 ```bash
 sudo nano /opt/markdown-converter/.env
 sudo systemctl restart markdown-converter
 ```
 
-Useful service commands:
+### Verificar
 
 ```bash
-sudo systemctl status markdown-converter
-sudo journalctl -u markdown-converter -f
+sudo systemctl status markdown-converter        # solo systemd
+sudo journalctl -u markdown-converter -f        # solo systemd
 curl -s http://127.0.0.1:8082/api/transcription/status
 ```
 
-To deploy without Local Whisper on a server without an NVIDIA GPU:
+`local.available: true` = GPU lista.
+
+---
+
+## Installation (English)
+
+### Prerequisites
+
+- Python 3.9+ and FFmpeg
+- Local Whisper: Pop!_OS/Ubuntu with NVIDIA driver
+- Cloud transcription: `OPENAI_API_KEY`
+- Optional OCR: `brew install tesseract` (macOS) / `apt-get install tesseract-ocr` (Linux)
+
+### Option A — Manual / development
+
+Order matters: both scripts share the same `.venv`.
+
+```bash
+git clone <repository-url> && cd markdown-converter
+./script -i                    # 1. creates .venv + dependencies (no sudo)
+./install_whisper_local.sh     # 2. GPU: CUDA + large-v3-turbo model, writes .env
+nano .env                      # 3. optional: OPENAI_API_KEY for cloud
+.venv/bin/python app.py        # 4. starts; loads .env automatically
+```
+
+Open `http://SERVER_IP:8082`. Step 2 is optional if you only convert documents or use OpenAI transcription; without it, create `.env` with `cp .env.example .env`.
+
+The app reads `.env` by itself at startup (including `LD_LIBRARY_PATH` for CUDA); no `source .env` needed. Only required for manual `faster-whisper` commands outside the app:
+
+```bash
+set -a; source .env; set +a
+```
+
+### Option B — Production with systemd
+
+One command from the repository (Pop!_OS/Ubuntu):
+
+```bash
+sudo ./install-systemd-service_new.sh
+```
+
+Installs everything into `/opt/markdown-converter`: dependencies, service account, model, `.env`, and the service enabled at boot. Without a GPU:
 
 ```bash
 sudo INSTALL_LOCAL_WHISPER=0 ./install-systemd-service_new.sh
 ```
 
-## Usage
+OpenAI key after installation:
 
-1. **Upload files** by dragging & dropping or clicking "Browse Files"
-2. **For audio/video, choose an engine and options**, then click "Convert Files"
-3. **Preview or copy** the Markdown content in the built-in viewer
-4. **Download** your converted files as `.md` files when needed
+```bash
+sudo nano /opt/markdown-converter/.env
+sudo systemctl restart markdown-converter
+```
 
-Files are stored temporarily and automatically deleted after 30 minutes of inactivity.
-The browser stores only session metadata for the result list, not file content.
+### Verify
 
-## Architecture
+```bash
+sudo systemctl status markdown-converter        # systemd only
+sudo journalctl -u markdown-converter -f        # systemd only
+curl -s http://127.0.0.1:8082/api/transcription/status
+```
 
-Built with:
+`local.available: true` = GPU ready.
 
-- **Flask** — Lightweight Python web framework
-- **MarkItDown** — Powerful document-to-Markdown converter
-- **OpenAI Python SDK** — GPT-4o transcription and speaker diarization
-- **faster-whisper** — Private CUDA speech-to-text transcription
-- **FFmpeg** — Audio extraction and codec normalization
-- **Tesseract OCR** — Optional image text extraction
-- **Vanilla JavaScript** — No build step required
-- **Responsive CSS** — Mobile-friendly design
+---
 
-## How It Works
+## Supported File Formats
 
-1. **Upload** — Files are securely uploaded and stored in temporary directories
-2. **Convert** — MarkItDown handles documents; FFmpeg prepares audio for the selected OpenAI or Local Whisper engine
-3. **Enhance** — For images, optional OCR extracts visible text
-4. **Use** — Converted Markdown can be previewed, copied, or downloaded
-5. **Cleanup** — Temporary files remain available during the session and are automatically deleted after timeout
+- **Documents:** `.pdf`, `.docx`, `.pptx`, `.xlsx`, `.html`, `.txt`, `.csv`, `.json`, `.xml`
+- **Images (OCR):** `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`
+- **Archives:** `.zip`, `.epub`
+- **Audio/video:** `.mp3`, `.wav`, `.m4a`, `.aac`, `.flac`, `.ogg`, `.webm`, `.mp4`
+
+## Features
+
+- Drag & drop, batch processing, live preview, copy/download
+- Transcription engines: GPT-4o, GPT-4o with speaker diarization, or private Local Whisper (CUDA)
+- OCR for images via Tesseract
+- Temp files auto-deleted after 30 minutes; nothing persisted
+- Upload limit 500 MB per file (override: `MAX_UPLOAD_SIZE_MB=1000 .venv/bin/python app.py`)
 
 ## Security & Privacy
 
-- Files are stored in temporary directories only
-- Automatic cleanup after 30 minutes
-- No file contents are persisted permanently
-- Documents stay local; audio is sent to OpenAI only when a GPT-4o engine is selected
-- Local Whisper loads only the model directory configured on the server
-- Local GPU transcription jobs are limited to one at a time
-- Maximum file size: 500 MB per file by default (configurable with `MAX_UPLOAD_SIZE_MB`)
-- Browser-friendly download headers
+- Files live only in temp directories, cleaned after 30 minutes
+- Documents never leave the server; audio goes to OpenAI only when a GPT-4o engine is selected
+- Local Whisper never makes API requests; MarkItDown's remote audio converter is disabled
+- All environment variables documented in [`.env.example`](.env.example); never commit a real key
 
-Direct audio and video uploads bypass MarkItDown's audio converter and use only
-the explicitly selected engine. Local Whisper never makes a transcription API
-request. The MarkItDown remote audio converter remains unregistered.
+## Architecture
 
-## Limitations
-
-- File size limited to 500 MB by default
-- Some complex layouts may lose formatting details
-- OCR quality depends on image clarity
-- Audio transcription requires FFmpeg plus either `OPENAI_API_KEY` or a configured CUDA local model
-- Unsupported file types will return an error
-
-## Development
-
-### Project Structure
+Flask + MarkItDown + OpenAI SDK + faster-whisper + FFmpeg + Tesseract. Vanilla JS frontend, no build step.
 
 ```
-markdown-converter/
-├── app.py              # Flask application
-├── requirements.txt    # Python dependencies
-├── templates/
-│   └── index.html     # Web interface
-└── static/
-    ├── style.css      # Styling
-    └── app.js         # Client-side logic
+app.py              # Flask server (loads .env via env_loader.py)
+transcription.py    # cloud + local transcription engines
+env_loader.py       # .env auto-load + LD_LIBRARY_PATH re-exec
+templates/ static/  # web UI
 ```
 
-### Running Tests
+## Tests
 
 ```bash
-pytest tests/
+python3 -m unittest discover -s tests
 ```
 
 ## License
 
-MIT License — See LICENSE file for details
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For issues, questions, or suggestions, please open an issue on GitHub.
-
----
-
-**Made with ❤️ by the Markdown Converter team**
+MIT License — See LICENSE file for details.
